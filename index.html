@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      name="description"
+      content="vel.os is a custom desktop with games, media, music, settings, and a taskbar."
+    />
+    <title>vel.os</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="desktop-shell">
+      <section class="desktop-wallpaper" aria-hidden="true"></section>
+      <div class="wallpaper-shade" aria-hidden="true"></div>
+      <div class="wallpaper-grain" aria-hidden="true"></div>
+
+      <section class="hero-clock" aria-label="Desktop clock">
+        <p class="clock-day" id="clockDay">Tuesday</p>
+        <h1 class="clock-time" id="clockTime">8:50</h1>
+        <p class="clock-date" id="clockDate">April 21, 2026</p>
+        <div class="now-playing-chip" id="nowPlayingChip" hidden>
+          <span class="now-playing-label">Now Playing</span>
+          <strong id="nowPlayingText">Velofy</strong>
+        </div>
+      </section>
+
+      <section class="drawer" id="launcherDrawer" aria-hidden="true">
+        <button class="drawer-scrim" type="button" aria-label="Close launcher" data-close-panel="launcher"></button>
+        <div class="drawer-panel launcher-panel">
+          <header class="drawer-head">
+            <div>
+              <p class="micro-label">vel.os</p>
+              <h2>Launcher</h2>
+              <p class="drawer-copy">Games, streaming, music, web apps, and settings in one desktop.</p>
+            </div>
+            <button class="close-button" type="button" data-close-panel="launcher">Close</button>
+          </header>
+
+          <section class="launcher-section">
+            <p class="section-label">Local Games</p>
+            <div class="icon-grid">
+              <button class="app-icon" type="button" data-launch-game="snake">
+                <span class="app-badge badge-text">OS</span>
+                <span class="icon-title">Offline Snake</span>
+                <span class="icon-meta">Offline</span>
+              </button>
+              <button class="app-icon" type="button" data-launch-game="merge">
+                <span class="app-badge badge-text">MG</span>
+                <span class="icon-title">Merge</span>
+                <span class="icon-meta">Puzzle</span>
+              </button>
+              <button class="app-icon" type="button" data-launch-game="tap">
+                <span class="app-badge badge-text">TR</span>
+                <span class="icon-title">Tap Rush</span>
+                <span class="icon-meta">Reflex</span>
+              </button>
+              <button class="app-icon" type="button" data-launch-game="word">
+                <span class="app-badge badge-text">WW</span>
+                <span class="icon-title">Word Warp</span>
+                <span class="icon-meta">Word</span>
+              </button>
+              <button class="app-icon" type="button" data-launch-game="memory">
+                <span class="app-badge badge-text">OM</span>
+                <span class="icon-title">Orb Memory</span>
+                <span class="icon-meta">Match</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="launcher-section">
+            <p class="section-label">Media</p>
+            <div class="icon-grid">
+              <button class="app-icon" type="button" data-open-panel="media">
+                <span class="app-badge badge-text">MH</span>
+                <span class="icon-title">Media Hub</span>
+                <span class="icon-meta">Streaming dashboard</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="youtube">
+                <img class="app-badge" src="./assets/images/apps/youtube.svg" alt="YouTube" />
+                <span class="icon-title">YouTube</span>
+                <span class="icon-meta">Search videos</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="spotify">
+                <span class="app-badge badge-text">SP</span>
+                <span class="icon-title">Spotify</span>
+                <span class="icon-meta">Search music</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="tiktok">
+                <img class="app-badge" src="./assets/images/apps/tiktok.svg" alt="TikTok" />
+                <span class="icon-title">TikTok</span>
+                <span class="icon-meta">Connect account</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="launcher-section">
+            <p class="section-label">Featured Games</p>
+            <div class="icon-grid">
+              <button class="app-icon" type="button" data-open-web="googlesnake">
+                <img class="app-badge" src="./assets/images/apps/google-snake.svg" alt="Google Snake" />
+                <span class="icon-title">Google Snake</span>
+                <span class="icon-meta">Web</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="rocketgoal">
+                <img class="app-badge" src="./assets/images/apps/rocketgoal.png" alt="RocketGoal" />
+                <span class="icon-title">RocketGoal</span>
+                <span class="icon-meta">Web</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="dune">
+                <img class="app-badge" src="./assets/images/apps/dune.jpg" alt="Dune" />
+                <span class="icon-title">Dune</span>
+                <span class="icon-meta">Web</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="fourcolors">
+                <img class="app-badge" src="./assets/images/apps/four-colors.jpg" alt="4 Colors" />
+                <span class="icon-title">4 Colors</span>
+                <span class="icon-meta">Web</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="snowrider">
+                <img class="app-badge" src="./assets/images/apps/snow-rider.svg" alt="Snow Rider" />
+                <span class="icon-title">Snow Rider</span>
+                <span class="icon-meta">Web</span>
+              </button>
+              <button class="app-icon" type="button" data-open-web="slither">
+                <img class="app-badge" src="./assets/images/apps/slither.svg" alt="Slither" />
+                <span class="icon-title">Slither</span>
+                <span class="icon-meta">Web</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="launcher-section">
+            <p class="section-label">System</p>
+            <div class="icon-grid">
+              <button class="app-icon" type="button" data-open-web="browser">
+                <img class="app-badge" src="./assets/images/apps/web-browser.svg" alt="Web Browser" />
+                <span class="icon-title">Web Browser</span>
+                <span class="icon-meta">Search or URL</span>
+              </button>
+              <button class="app-icon" type="button" data-open-panel="settings">
+                <span class="app-badge badge-text">ST</span>
+                <span class="icon-title">Settings</span>
+                <span class="icon-meta">Wallpaper and font</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="drawer" id="mediaDrawer" aria-hidden="true">
+        <button class="drawer-scrim" type="button" aria-label="Close Media Hub" data-close-panel="media"></button>
+        <div class="drawer-panel media-panel">
+          <header class="drawer-head">
+            <div>
+              <p class="micro-label">Media Hub</p>
+              <h2>Streaming Dashboard</h2>
+              <p class="drawer-copy">YouTube, Spotify, and TikTok wired into the desktop with official APIs and embeds.</p>
+            </div>
+            <button class="close-button" type="button" data-close-panel="media">Close</button>
+          </header>
+
+          <section class="media-hero">
+            <div>
+              <p class="section-label">All-in-one media</p>
+              <h3>Search, preview, and launch content without leaving vel.os.</h3>
+              <p>Search real YouTube and Spotify results, connect TikTok, and open official players without changing the desktop UI.</p>
+            </div>
+            <div class="media-stats">
+              <article><strong>3</strong><span>Providers</span></article>
+              <article><strong>0</strong><span>Grid iframes</span></article>
+              <article><strong>API</strong><span>Backed data</span></article>
+            </div>
+          </section>
+
+          <form class="media-search" id="mediaSearchForm">
+            <input id="mediaSearchInput" type="search" placeholder="Search YouTube or Spotify" autocomplete="off" />
+            <button class="ghost-button is-solid" type="submit">Search</button>
+          </form>
+
+          <div class="media-tabs" aria-label="Media providers">
+            <button class="switch-chip is-active" type="button" data-media-provider="all">All</button>
+            <button class="switch-chip" type="button" data-media-provider="youtube">YouTube</button>
+            <button class="switch-chip" type="button" data-media-provider="spotify">Spotify</button>
+            <button class="switch-chip" type="button" data-media-provider="tiktok">TikTok</button>
+          </div>
+
+          <section class="media-player" id="mediaPlayer" hidden>
+            <div class="media-player-head">
+              <div>
+                <p class="section-label" id="mediaPlayerProvider">Now Playing</p>
+                <h3 id="mediaPlayerTitle">Select media</h3>
+                <p id="mediaPlayerMeta">Official embeds load here when supported.</p>
+              </div>
+              <button class="ghost-button" id="mediaPlayerClose" type="button">Close Player</button>
+            </div>
+            <div class="media-player-frame" id="mediaPlayerFrame"></div>
+          </section>
+
+          <div class="media-status">
+            <div>
+              <h3 id="mediaResultsTitle">Recommended</h3>
+              <p id="mediaResultsCopy">Browse provider cards or search above.</p>
+            </div>
+            <div class="media-loading" id="mediaLoading" hidden>Loading</div>
+          </div>
+
+          <div class="media-grid" id="mediaGrid"></div>
+          <div class="load-more-wrap">
+            <button class="load-more" id="mediaLoadMore" type="button">Load More YouTube</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer" id="webDrawer" aria-hidden="true">
+        <button class="drawer-scrim" type="button" aria-label="Close website window" data-close-panel="web"></button>
+        <div class="drawer-panel web-panel">
+          <header class="drawer-head">
+            <div>
+              <p class="micro-label" id="webTag">Website</p>
+              <h2 id="webTitle">RocketGoal</h2>
+              <p class="drawer-copy" id="webDescription">Live site loaded inside vel.os.</p>
+            </div>
+            <div class="window-actions">
+              <button class="close-button is-disabled" type="button" disabled>Inside Only</button>
+              <button class="close-button" id="webReloadButton" type="button">Reload</button>
+              <button class="close-button" type="button" data-close-panel="web">Close</button>
+            </div>
+          </header>
+
+          <div class="web-toolbar">
+            <form class="url-form" id="webUrlForm">
+              <input class="url-input" id="webUrlInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search or enter a URL" value="https://rocketgoal.io/" aria-label="Search or enter a website URL" />
+              <button class="ghost-button is-solid" type="submit">Go</button>
+            </form>
+            <p class="tiny-note web-note" id="webNote">Search, paste a URL, or paste a supported video link.</p>
+          </div>
+
+          <div class="media-tools" id="mediaTools" hidden>
+            <form class="media-form" id="mediaEmbedForm">
+              <input class="url-input" id="mediaEmbedInput" type="search" autocomplete="off" spellcheck="false" placeholder="Paste a YouTube or TikTok video link" aria-label="Video link or ID" />
+              <button class="ghost-button is-solid" type="submit">Embed Video</button>
+            </form>
+            <p class="tiny-note">Full video sites block iframe apps. Individual YouTube and TikTok videos can load here through their official embed players.</p>
+          </div>
+
+          <div class="web-shell">
+            <div class="web-warning" id="webWarning" hidden>
+              <strong>Embedding may be blocked.</strong>
+              <p id="webWarningText">This site may refuse to load inside a normal browser frame.</p>
+            </div>
+            <iframe id="webFrame" class="web-frame" title="Website view" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gamepad; gyroscope; picture-in-picture; web-share" allowfullscreen src="about:blank"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer" id="musicDrawer" aria-hidden="true">
+        <button class="drawer-scrim" type="button" aria-label="Close Velofy" data-close-panel="music"></button>
+        <div class="drawer-panel music-panel">
+          <header class="drawer-head">
+            <div>
+              <p class="micro-label">Velofy</p>
+              <h2>Music</h2>
+              <p class="drawer-copy">Real local tracks with playback, progress, and track switching.</p>
+            </div>
+            <button class="close-button" type="button" data-close-panel="music">Close</button>
+          </header>
+          <div class="music-layout">
+            <section class="music-player-card">
+              <div class="album-art"><img id="velofyArtwork" src="./assets/images/wallpaper/vel.png" alt="vel.os artwork" /></div>
+              <div class="track-copy">
+                <p class="micro-label">Now Playing</p>
+                <h3 id="velofyTitle">Monkeys Spinning Monkeys</h3>
+                <p class="track-artist" id="velofyArtist">Kevin MacLeod</p>
+                <p class="track-state" id="velofyState">Paused</p>
+              </div>
+              <div class="progress-wrap">
+                <input id="velofyProgress" type="range" min="0" max="100" value="0" aria-label="Velofy progress" />
+                <div class="progress-row"><span id="velofyElapsed">0:00</span><span id="velofyDuration">0:00</span></div>
+              </div>
+              <div class="transport-row">
+                <button class="transport-button" id="velofyPrev" type="button">Prev</button>
+                <button class="transport-button transport-main" id="velofyPlay" type="button">Play</button>
+                <button class="transport-button" id="velofyNext" type="button">Next</button>
+              </div>
+              <p class="license-note">Music by Kevin MacLeod at <a href="https://incompetech.com/" target="_blank" rel="noreferrer noopener">incompetech.com</a> licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer noopener">CC BY 4.0</a>.</p>
+            </section>
+            <section class="music-side">
+              <article class="side-card"><p class="section-label">Playlist</p><div class="playlist-list" id="velofyPlaylist"></div></article>
+            </section>
+          </div>
+          <audio id="velofyAudio" preload="metadata"></audio>
+        </div>
+      </section>
+
+      <section class="drawer" id="gameDrawer" aria-hidden="true">
+        <button class="drawer-scrim" type="button" aria-label="Close game viewer" data-close-panel="game"></button>
+        <div class="drawer-panel game-panel">
+          <header class="drawer-head">
+            <div>
+              <p class="micro-label" id="activeCategory">Arcade</p>
+              <h2 id="activeTitle">Offline Snake</h2>
+              <p class="drawer-copy" id="activeDescription">Guide the local snake, collect food, and avoid your own trail.</p>
+            </div>
+            <button class="close-button" type="button" data-close-panel="game">Close</button>
+          </header>
+
+          <div class="quick-switchers" role="tablist" aria-label="Local games">
+            <button class="switch-chip is-active" type="button" data-game-switch="snake">Snake</button>
+            <button class="switch-chip" type="button" data-game-switch="merge">Merge</button>
+            <button class="switch-chip" type="button" data-game-switch="tap">Tap Rush</button>
+            <button class="switch-chip" type="button" data-game-switch="word">Word Warp</button>
+            <button class="switch-chip" type="button" data-game-switch="memory">Memory</button>
+          </div>
+
+          <div class="play-meta">
+            <article class="meta-card"><span>Best For</span><strong id="activeBest">Classic arcade chasing</strong></article>
+            <article class="meta-card"><span>Controls</span><strong id="activeControls">Swipe, arrows, or on-screen pad</strong></article>
+          </div>
+
+          <div class="game-stage">
+            <section class="game-screen is-active" data-screen="snake">
+              <div class="game-shell">
+                <div class="game-toolbar">
+                  <div class="score-pills">
+                    <div class="score-pill"><span>Score</span><strong id="snakeScore">0</strong></div>
+                    <div class="score-pill"><span>Best</span><strong id="snakeBest">0</strong></div>
+                  </div>
+                  <div class="toolbar-actions">
+                    <button class="ghost-button" id="snakeStartPause" type="button">Start</button>
+                    <button class="ghost-button" id="snakeReset" type="button">Reset</button>
+                  </div>
+                </div>
+                <div class="canvas-shell" id="snakeSwipeZone"><canvas id="snakeCanvas" width="420" height="420" aria-label="Snake board"></canvas></div>
+                <div class="mobile-pad" data-pad="snake" aria-label="Snake controls">
+                  <button type="button" data-dir="up">Up</button>
+                  <button type="button" data-dir="left">Left</button>
+                  <button type="button" data-dir="down">Down</button>
+                  <button type="button" data-dir="right">Right</button>
+                </div>
+                <p class="game-tip" id="snakeStatus" aria-live="polite">Start a run, collect food, and avoid your own trail.</p>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen="merge">
+              <div class="game-shell">
+                <div class="game-toolbar">
+                  <div class="score-pills merge-pills">
+                    <div class="score-pill"><span>Score</span><strong id="mergeScore">0</strong></div>
+                    <div class="score-pill"><span>Best</span><strong id="mergeBest">0</strong></div>
+                  </div>
+                  <button class="ghost-button" id="mergeReset" type="button">New Board</button>
+                </div>
+                <div class="merge-board-wrap" id="mergeSwipeZone"><div class="merge-board" id="mergeBoard" aria-label="Merge board"></div></div>
+                <div class="mobile-pad" data-pad="merge" aria-label="Merge controls">
+                  <button type="button" data-dir="up">Up</button>
+                  <button type="button" data-dir="left">Left</button>
+                  <button type="button" data-dir="down">Down</button>
+                  <button type="button" data-dir="right">Right</button>
+                </div>
+                <p class="game-tip" id="mergeStatus" aria-live="polite">Swipe the board or use arrow keys to combine matching tiles.</p>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen="tap">
+              <div class="game-shell">
+                <div class="game-toolbar">
+                  <div class="score-pills">
+                    <div class="score-pill"><span>Score</span><strong id="tapScore">0</strong></div>
+                    <div class="score-pill"><span>Time</span><strong id="tapTime">20</strong></div>
+                    <div class="score-pill"><span>Best</span><strong id="tapBest">0</strong></div>
+                  </div>
+                  <button class="ghost-button" id="tapStart" type="button">Start Sprint</button>
+                </div>
+                <div class="tap-grid" id="tapGrid" aria-label="Tap Rush grid"></div>
+                <p class="game-tip" id="tapStatus" aria-live="polite">Press start, then tap the bright cell before it jumps away.</p>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen="word">
+              <div class="game-shell">
+                <div class="game-toolbar">
+                  <div class="score-pills merge-pills">
+                    <div class="score-pill"><span>Streak</span><strong id="wordStreak">0</strong></div>
+                    <div class="score-pill"><span>Solved</span><strong id="wordSolved">0</strong></div>
+                  </div>
+                  <div class="toolbar-actions">
+                    <button class="ghost-button" id="wordShuffle" type="button">Reshuffle</button>
+                    <button class="ghost-button" id="wordNext" type="button">New Word</button>
+                  </div>
+                </div>
+                <div class="word-card">
+                  <p class="word-label" id="wordCategory">Theme</p>
+                  <div class="scramble-display" id="wordScramble">S T A R</div>
+                  <p class="word-hint" id="wordHint">Hint: A clue will appear here.</p>
+                  <form class="word-form" id="wordForm">
+                    <input id="wordInput" name="word" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Type your guess" />
+                    <button class="ghost-button is-solid" type="submit">Submit</button>
+                  </form>
+                </div>
+                <p class="game-tip" id="wordStatus" aria-live="polite">Unscramble the letters to keep your streak alive.</p>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen="memory">
+              <div class="game-shell">
+                <div class="game-toolbar">
+                  <div class="score-pills merge-pills">
+                    <div class="score-pill"><span>Moves</span><strong id="memoryMoves">0</strong></div>
+                    <div class="score-pill"><span>Pairs</span><strong id="memoryPairs">0 / 6</strong></div>
+                  </div>
+                  <button class="ghost-button" id="memoryReset" type="button">Shuffle Grid</button>
+                </div>
+                <div class="memory-grid" id="memoryGrid" aria-label="Memory cards"></div>
+                <p class="game-tip" id="memoryStatus" aria-live="polite">Find the matching pairs with as few moves as possible.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer" id="settingsDrawer" aria-hidden="true">
+        <button class="drawer-scrim" type="button" aria-label="Close settings" data-close-panel="settings"></button>
+        <div class="drawer-panel settings-panel">
+          <header class="drawer-head">
+            <div>
+              <p class="micro-label">vel.os</p>
+              <h2>Settings</h2>
+              <p class="drawer-copy">Switch wallpapers and fonts without leaving the desktop.</p>
+            </div>
+            <button class="close-button" type="button" data-close-panel="settings">Close</button>
+          </header>
+          <div class="settings-layout">
+            <article class="settings-card">
+              <p class="section-label">Wallpapers</p>
+              <div class="wallpaper-picker">
+                <button class="wallpaper-option" type="button" data-wallpaper-option="vel"><img src="./assets/images/wallpaper/vel.png" alt="Ink eye wallpaper" /><strong>Ink Eye</strong><span>Dark monochrome default</span></button>
+                <button class="wallpaper-option" type="button" data-wallpaper-option="snow"><img src="./assets/images/wallpaper/IMG_2063.png" alt="Snow lake wallpaper" /><strong>Snow Lake</strong><span>Cold cinematic scene</span></button>
+                <button class="wallpaper-option" type="button" data-wallpaper-option="moon"><img src="./assets/images/wallpaper/IMG_2064.png" alt="Moon tree wallpaper" /><strong>Moon Tree</strong><span>Blue anime night</span></button>
+              </div>
+            </article>
+            <article class="settings-card">
+              <p class="section-label">Fonts</p>
+              <div class="font-picker">
+                <button class="font-option" type="button" data-font-option="system"><strong>System Sans</strong><span>Clean desktop look</span><span class="font-sample font-sample-system">vel.os stays sharp and minimal.</span></button>
+                <button class="font-option" type="button" data-font-option="serif"><strong>Serif</strong><span>Cinematic reading vibe</span><span class="font-sample font-sample-serif">vel.os feels more dramatic and polished.</span></button>
+                <button class="font-option" type="button" data-font-option="rounded"><strong>Rounded</strong><span>Softer tablet feel</span><span class="font-sample font-sample-rounded">vel.os feels lighter and more casual.</span></button>
+              </div>
+              <p class="tiny-note settings-note">Your wallpaper and font save on this device after refresh.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <footer class="taskbar" aria-label="vel.os taskbar">
+        <div class="taskbar-left"><button class="start-button" type="button" id="startButton">vel.os</button></div>
+        <div class="taskbar-center">
+          <button class="taskbar-app is-active" type="button" id="openLauncherButton"><span class="taskbar-icon taskbar-icon-text">G</span><span class="taskbar-label">Games</span></button>
+          <button class="taskbar-app" type="button" id="openMediaButton" data-open-panel="media"><span class="taskbar-icon taskbar-icon-text">M</span><span class="taskbar-label">Media</span></button>
+          <button class="taskbar-app" type="button" data-open-web="googlesnake"><img class="taskbar-icon" src="./assets/images/apps/google-snake.svg" alt="Google Snake" /><span class="taskbar-label">Snake</span></button>
+          <button class="taskbar-app" type="button" data-open-web="rocketgoal"><img class="taskbar-icon" src="./assets/images/apps/rocketgoal.png" alt="RocketGoal" /><span class="taskbar-label">RocketGoal</span></button>
+          <button class="taskbar-app" type="button" data-open-web="dune"><img class="taskbar-icon" src="./assets/images/apps/dune.jpg" alt="Dune" /><span class="taskbar-label">Dune</span></button>
+          <button class="taskbar-app" type="button" data-open-web="snowrider"><img class="taskbar-icon" src="./assets/images/apps/snow-rider.svg" alt="Snow Rider" /><span class="taskbar-label">Snow Rider</span></button>
+          <button class="taskbar-app" type="button" id="openMusicButton"><span class="taskbar-icon taskbar-icon-text">V</span><span class="taskbar-label">Velofy</span></button>
+          <button class="taskbar-app" type="button" data-open-web="youtube"><img class="taskbar-icon" src="./assets/images/apps/youtube.svg" alt="YouTube" /><span class="taskbar-label">YouTube</span></button>
+          <button class="taskbar-app" type="button" data-open-web="spotify"><span class="taskbar-icon taskbar-icon-text">SP</span><span class="taskbar-label">Spotify</span></button>
+          <button class="taskbar-app" type="button" data-open-web="tiktok"><img class="taskbar-icon" src="./assets/images/apps/tiktok.svg" alt="TikTok" /><span class="taskbar-label">TikTok</span></button>
+          <button class="taskbar-app" type="button" data-open-web="browser"><img class="taskbar-icon" src="./assets/images/apps/web-browser.svg" alt="Web Browser" /><span class="taskbar-label">Web</span></button>
+        </div>
+        <div class="taskbar-right">
+          <button class="taskbar-app" type="button" id="openSettingsButton" data-open-panel="settings"><span class="taskbar-icon taskbar-icon-text">S</span><span class="taskbar-label">Settings</span></button>
+          <div class="taskbar-now-playing" id="taskbarNowPlaying" hidden><span>Playing</span><strong id="taskbarNowPlayingText">Velofy</strong></div>
+          <div class="taskbar-clock"><strong id="taskbarTime">8:50</strong><span id="taskbarDate">Tue</span></div>
+        </div>
+      </footer>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

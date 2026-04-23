@@ -1,0 +1,12 @@
+{
+  "name": "vel-os",
+  "version": "1.0.0",
+  "private": true,
+  "description": "vel.os desktop media hub",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

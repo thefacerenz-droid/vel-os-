@@ -1,0 +1,2886 @@
+const storage = {
+  get(key, fallback = "") {
+    try {
+      const value = window.localStorage.getItem(key);
+      if (value === null) return fallback;
+      if (typeof fallback === "number") {
+        const parsed = Number(value);
+        return Number.isNaN(parsed) ? fallback : parsed;
+      }
+      return value;
+    } catch (error) {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      window.localStorage.setItem(key, String(value));
+    } catch (error) {
+      return;
+    }
+  }
+};
+
+const localGameMeta = {
+  snake: {
+    category: "Arcade",
+    title: "Offline Snake",
+    description:
+      "Guide the snake, collect food, and avoid your own trail in a fast monochrome local clone.",
+    best: "Classic arcade chasing",
+    controls: "Swipe, arrows, or on-screen pad"
+  },
+  merge: {
+    category: "Puzzle",
+    title: "Merge",
+    description:
+      "Slide and combine matching tiles while the board slowly fills with pressure.",
+    best: "Quick puzzle sessions",
+    controls: "Swipe, arrows, or on-screen pad"
+  },
+  tap: {
+    category: "Reflex",
+    title: "Tap Rush",
+    description:
+      "A bright target jumps around the grid while the timer counts down.",
+    best: "Short speed runs",
+    controls: "Tap or click the bright cell"
+  },
+  word: {
+    category: "Word",
+    title: "Word Warp",
+    description:
+      "Unscramble themed words and keep your streak alive.",
+    best: "Quick language breaks",
+    controls: "Type your guess and submit"
+  },
+  memory: {
+    category: "Match",
+    title: "Orb Memory",
+    description:
+      "Flip cards, lock in the pairs, and clear the board in fewer moves.",
+    best: "Relaxed pattern play",
+    controls: "Tap or click cards"
+  }
+};
+
+const webApps = {
+  browser: {
+    title: "Web Browser",
+    tag: "URL Launcher",
+    description: "Search the web or open a URL inside the vel.os web window.",
+    url: "about:blank",
+    embedBlocked: false,
+    note: "Type a search like 'space games' or a full URL. This is a normal browser frame, not a bypass proxy."
+  },
+  googlesnake: {
+    title: "Google Snake",
+    tag: "Game Site",
+    description: "Google's real Snake arcade page opened through vel.os.",
+    url: "https://www.google.com/fbx?fbx=snake_arcade&fbxga=1&hl=en&origin=www.google.com",
+    embedBlocked: true,
+    note: "Google Snake currently sends X-Frame-Options: SAMEORIGIN, so browsers block it inside iframe projects. The built-in Offline Snake is the inside-only fallback."
+  },
+  rocketgoal: {
+    title: "RocketGoal",
+    tag: "Game Site",
+    description: "Live RocketGoal site opened inside vel.os.",
+    url: "https://rocketgoal.io/",
+    embedBlocked: false,
+    note: "RocketGoal should load inside vel.os unless the site or network blocks iframe access."
+  },
+  dune: {
+    title: "Dune",
+    tag: "Game Site",
+    description: "A better Dune game page opened inside vel.os.",
+    url: "https://www.gamepix.com/play/dune",
+    embedBlocked: false,
+    note: "Replaced the Google Sites version because it refused to connect inside an iframe."
+  },
+  fourcolors: {
+    title: "4 Colors Multiplayer",
+    tag: "Game Site",
+    description: "Live GamePix page for 4 Colors Multiplayer inside vel.os.",
+    url: "https://www.gamepix.com/play/4-colors-multiplayer",
+    embedBlocked: false,
+    note: "4 Colors should load inside vel.os unless the site or network blocks iframe access."
+  },
+  snowrider: {
+    title: "Snow Rider",
+    tag: "Game Site",
+    description: "Snow Rider 3D opened inside vel.os using an inline-friendly version.",
+    url: "https://snowrider3dworld.com/",
+    embedBlocked: false,
+    note: "This version did not advertise iframe blocking in the header check, so it has a good chance to stay inside vel.os."
+  },
+  slither: {
+    title: "Slither",
+    tag: "Game Site",
+    description: "Slither opened through vel.os using the official site.",
+    url: "http://slither.io/",
+    embedBlocked: false,
+    note: "The official Slither site uses HTTP, so it may be blocked if you later host vel.os on HTTPS. From a local file it has the best chance to load inline."
+  },
+  youtube: {
+    title: "YouTube",
+    tag: "Media Provider",
+    description: "Search YouTube with the backend API and play videos in vel.os.",
+    url: "about:blank",
+    mode: "mediaProvider",
+    provider: "youtube",
+    embedBlocked: false,
+    note: "YouTube search runs through /api/youtube/search so the API key stays on the server."
+  },
+  spotify: {
+    title: "Spotify",
+    tag: "Media Provider",
+    description: "Search Spotify metadata and open official Spotify embeds.",
+    url: "about:blank",
+    mode: "mediaProvider",
+    provider: "spotify",
+    embedBlocked: false,
+    note: "Spotify search runs through /api/spotify/search using server-side client credentials."
+  },
+  shorts: {
+    title: "Shorts Feed",
+    tag: "Short Video",
+    description: "A TikTok-style vertical feed powered by embeddable YouTube Shorts.",
+    url: "about:blank",
+    mode: "mediaProvider",
+    provider: "shorts",
+    embedBlocked: false,
+    note: "This opens the vel.os Shorts feed because YouTube videos support official iframe embeds."
+  },
+  tiktok: {
+    title: "TikTok",
+    tag: "Media Provider",
+    description: "Connect TikTok to display authorized profile videos.",
+    url: "about:blank",
+    mode: "mediaProvider",
+    provider: "tiktok",
+    embedBlocked: false,
+    note: "TikTok uses official Login Kit and Display API endpoints only."
+  },
+  tubi: {
+    title: "Tubi",
+    tag: "Watch Site",
+    description: "Tubi cannot be embedded as a full website inside vel.os.",
+    url: "about:blank",
+    mode: "insideOnlyBlocked",
+    embedBlocked: true,
+    note: "Tubi blocks iframe loading for the main app. To keep the project inside-only, use local videos or official embeddable trailers instead."
+  },
+  pluto: {
+    title: "Pluto TV",
+    tag: "Watch Site",
+    description: "Pluto TV cannot be embedded as a full website inside vel.os.",
+    url: "about:blank",
+    mode: "insideOnlyBlocked",
+    embedBlocked: true,
+    note: "Pluto TV blocks iframe loading for the main app. To keep the project inside-only, use local videos or official embeddable clips instead."
+  }
+};
+
+const MEDIA_YOUTUBE_PAGE_SIZE = 12;
+
+const wallpaperOptions = {
+  vel: {
+    label: "Ink Eye",
+    path: "./assets/images/wallpaper/vel.png"
+  },
+  snow: {
+    label: "Snow Lake",
+    path: "./assets/images/wallpaper/IMG_2063.png"
+  },
+  moon: {
+    label: "Moon Tree",
+    path: "./assets/images/wallpaper/IMG_2064.png"
+  }
+};
+
+const velofyTracks = [
+  {
+    title: "Monkeys Spinning Monkeys",
+    artist: "Kevin MacLeod",
+    src: "./assets/audio/monkeys-spinning-monkeys.mp3"
+  },
+  {
+    title: "Pixelland",
+    artist: "Kevin MacLeod",
+    src: "./assets/audio/pixelland.mp3"
+  },
+  {
+    title: "Hyperfun",
+    artist: "Kevin MacLeod",
+    src: "./assets/audio/hyperfun.mp3"
+  }
+];
+
+const mediaYouTubeCatalog = [
+  {
+    id: "M7lc1UVf-VE",
+    title: "YouTube Player Demo",
+    channel: "YouTube Developers",
+    thumbnail: "https://i.ytimg.com/vi/M7lc1UVf-VE/hqdefault.jpg",
+    tags: ["youtube", "demo", "player"]
+  },
+  {
+    id: "dQw4w9WgXcQ",
+    title: "Never Gonna Give You Up",
+    channel: "Rick Astley",
+    thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+    tags: ["music", "classic", "pop"]
+  },
+  {
+    id: "jfKfPfyJRdk",
+    title: "Lofi Radio",
+    channel: "Lofi Girl",
+    thumbnail: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg",
+    tags: ["music", "study", "lofi"]
+  },
+  {
+    id: "9bZkp7q19f0",
+    title: "Gangnam Style",
+    channel: "PSY",
+    thumbnail: "https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg",
+    tags: ["music", "dance", "viral"]
+  },
+  {
+    id: "kJQP7kiw5Fk",
+    title: "Despacito",
+    channel: "Luis Fonsi",
+    thumbnail: "https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg",
+    tags: ["music", "latin", "popular"]
+  },
+  {
+    id: "ScMzIvxBSi4",
+    title: "Big Buck Bunny",
+    channel: "Blender Foundation",
+    thumbnail: "https://i.ytimg.com/vi/ScMzIvxBSi4/hqdefault.jpg",
+    tags: ["animation", "movie", "family"]
+  }
+];
+
+const mediaShortsCatalog = [
+  {
+    title: "Flower Loop",
+    channel: "MDN Video",
+    src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    poster: "linear-gradient(135deg, #111, #6f6f6f)",
+    tags: ["shorts", "nature", "loop", "tiktok"]
+  },
+  {
+    title: "Bunny Sprint",
+    channel: "W3C Media",
+    src: "https://media.w3.org/2010/05/bunny/trailer.mp4",
+    poster: "linear-gradient(135deg, #050505, #888)",
+    tags: ["shorts", "animation", "bunny", "movie"]
+  },
+  {
+    title: "Sintel Cut",
+    channel: "W3C Media",
+    src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    poster: "linear-gradient(135deg, #0d0d0d, #577083)",
+    tags: ["shorts", "cinematic", "trailer"]
+  },
+  {
+    title: "Big Buck Bite",
+    channel: "W3Schools",
+    src: "https://www.w3schools.com/html/mov_bbb.mp4",
+    poster: "linear-gradient(135deg, #161616, #a5a5a5)",
+    tags: ["shorts", "cartoon", "quick"]
+  },
+  {
+    title: "Five Second Hit",
+    channel: "SampleLib",
+    src: "https://samplelib.com/lib/preview/mp4/sample-5s.mp4",
+    poster: "linear-gradient(135deg, #090909, #4e5b67)",
+    tags: ["shorts", "sample", "fast"]
+  }
+];
+
+const veltokClipPool = [
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Heelflip_Skate.webm",
+    thumbnail: "linear-gradient(135deg, #050505, #4b4b4b)",
+    source: "Wikimedia Commons: Heelflip Skate"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/f/f5/Scootering_video.webm",
+    thumbnail: "linear-gradient(135deg, #111, #35424f)",
+    source: "Wikimedia Commons: Scootering video"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/8/8f/Boxing_in_Mitchells_Plain.webm",
+    thumbnail: "linear-gradient(135deg, #0b0b0b, #777)",
+    source: "Wikimedia Commons: Boxing in Mitchells Plain"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/5/5a/B-boy_performing_airchair_spin_in_slow_motion.webm",
+    thumbnail: "linear-gradient(135deg, #050505, #2f4f68)",
+    source: "Wikimedia Commons: B-boy airchair"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/f/fe/Hula_hoop_fire_dance_video_Turkey_2015.webm",
+    thumbnail: "linear-gradient(135deg, #101010, #7b6652)",
+    source: "Wikimedia Commons: Hula hoop fire dance"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/4/48/Kick-up.webm",
+    thumbnail: "linear-gradient(135deg, #050505, #6b6b6b)",
+    source: "Wikimedia Commons: Kick-up"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/2/21/Most_unique_munna.webm",
+    thumbnail: "linear-gradient(135deg, #151515, #40515f)",
+    source: "Wikimedia Commons: Most unique munna"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/1/17/2000_Powermove.webm",
+    thumbnail: "linear-gradient(135deg, #080808, #535353)",
+    source: "Wikimedia Commons: 2000 Powermove"
+  },
+  {
+    src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    thumbnail: "linear-gradient(135deg, #080808, #8f8f8f)",
+    source: "W3C Media: Sintel trailer"
+  },
+  {
+    src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    thumbnail: "linear-gradient(135deg, #050505, #46556b)",
+    source: "MDN sample video"
+  }
+];
+
+const veltokPromptSets = [
+  {
+    titles: ["Heelflip was way too clean", "Skate clip cooked the whole feed", "Tiny trick, massive replay value", "Board control went crazy", "This heelflip deserved slow-mo", "Skate edit with perfect timing"],
+    creators: ["@skatevault", "@streetclipz", "@kickpush", "@boardroom"],
+    tags: ["skate", "trick", "street", "fyp"]
+  },
+  {
+    titles: ["Scooter line through the park", "Bro hit the smoothest rollaway", "Scooter POV had no business being clean", "Park line looked like a game clip", "Concrete park speedrun", "This trick chain kept going"],
+    creators: ["@scootcore", "@parkline", "@wheelmode", "@concreteclips"],
+    tags: ["scooter", "park", "action", "fyp"]
+  },
+  {
+    titles: ["Boxing footwork looking sharp", "Bag work sounded like thunder", "Sparring drill had boss-fight energy", "Coach said keep your hands up", "Clean boxing training clip", "This combo was all timing"],
+    creators: ["@glovework", "@fightcamp", "@boxingdaily", "@ringclips"],
+    tags: ["boxing", "training", "sports", "safe"]
+  },
+  {
+    titles: ["B-boy freeze made everyone stop", "Airchair spin was actually wild", "Dance battle energy unlocked", "Breakdance move hit different", "This floorwork needs a replay", "Crew went silent after this"],
+    creators: ["@bboyclips", "@cyphermode", "@floorwork", "@dancevault"],
+    tags: ["dance", "bboy", "breakdance", "viral"]
+  },
+  {
+    titles: ["Fire hoop clip looked unreal", "This night performance glowed", "Festival energy went cinematic", "Fire dance but make it FYP", "The lighting carried this edit", "This belongs in a movie intro"],
+    creators: ["@fireloop", "@nightshow", "@festivalcuts", "@glowedit"],
+    tags: ["dance", "fire", "night", "edit"]
+  },
+  {
+    titles: ["Kick-up timing was perfect", "Soccer control check passed", "One touch and the clip was saved", "Freestyle move with clean balance", "Ball control had NPCs watching", "Simple move, clean execution"],
+    creators: ["@freestyleball", "@touchclips", "@skillcheck", "@streetball"],
+    tags: ["soccer", "freestyle", "skill", "sports"]
+  },
+  {
+    titles: ["Street dance went full main character", "This move was pure brainrot energy", "Dance clip with chaotic timing", "Bro danced like the beat owed money", "Comment section would cook this", "NPC dance unlocked"],
+    creators: ["@streetdance", "@npcfactory", "@brainrotcuts", "@dancechaos"],
+    tags: ["dance", "brainrot", "funny", "fyp"]
+  },
+  {
+    titles: ["Power move landed too clean", "Breakdance combo had boss music", "Spin cycle but make it dance", "This move needs a health bar", "Floor combo was not normal", "B-boy clip with final boss energy"],
+    creators: ["@powermove", "@spinclipz", "@bossdance", "@bboydaily"],
+    tags: ["dance", "powermove", "action", "edit"]
+  },
+  {
+    titles: ["Cinematic clip felt like a cutscene", "This looked like the start of a game", "Movie trailer energy on the feed", "The lighting carried the whole thing", "Action edit with no context", "Scene looked expensive for no reason"],
+    creators: ["@cutscene", "@moviefeed", "@cinematic", "@editvault"],
+    tags: ["cinematic", "movie", "edit", "action"]
+  },
+  {
+    titles: ["Chill clip after the chaos", "Nature video somehow reset my brain", "One peaceful scroll before brainrot", "Flower loop hit different at night", "Soft reset for the feed", "This calm clip saved the doomscroll"],
+    creators: ["@chillcore", "@softscroll", "@calmfeed", "@nightloop"],
+    tags: ["chill", "nature", "loop", "vibe"]
+  }
+];
+
+const veltokFeedSeed = Array.from({ length: 80 }, (_, index) => {
+  const set = veltokPromptSets[index % veltokPromptSets.length];
+  return {
+    title: set.titles[Math.floor(index / veltokPromptSets.length) % set.titles.length],
+    creator: set.creators[index % set.creators.length],
+    tags: [...set.tags, index % 3 === 0 ? "brainrot" : "scroll"]
+  };
+});
+
+const mediaTikTokCatalog = veltokFeedSeed.map((item, index) => {
+  const clip = veltokClipPool[index % veltokClipPool.length];
+  return {
+    ...item,
+    src: clip.src,
+    thumbnail: clip.thumbnail
+  };
+});
+
+const mediaTubiCatalog = [
+  {
+    title: "Sci-Fi Signal",
+    genre: "Science Fiction",
+    url: "https://tubitv.com/",
+    accent: "#d9d9d9",
+    tags: ["future", "space", "movie"]
+  },
+  {
+    title: "Shadow Arcade",
+    genre: "Action",
+    url: "https://tubitv.com/",
+    accent: "#9a9a9a",
+    tags: ["action", "games", "movie"]
+  },
+  {
+    title: "After Hours",
+    genre: "Thriller",
+    url: "https://tubitv.com/",
+    accent: "#707070",
+    tags: ["night", "thriller", "drama"]
+  },
+  {
+    title: "Retro Channel",
+    genre: "Comedy",
+    url: "https://tubitv.com/",
+    accent: "#cfcfcf",
+    tags: ["classic", "funny", "show"]
+  }
+];
+
+const mediaPlutoCatalog = [
+  {
+    title: "Pluto Action",
+    category: "Live Channel",
+    url: "https://pluto.tv/",
+    accent: "#e7e7e7",
+    tags: ["live", "action", "channel"]
+  },
+  {
+    title: "Movie Favorites",
+    category: "Movies",
+    url: "https://pluto.tv/",
+    accent: "#b8b8b8",
+    tags: ["movies", "free", "featured"]
+  },
+  {
+    title: "Classic TV",
+    category: "Live TV",
+    url: "https://pluto.tv/",
+    accent: "#8e8e8e",
+    tags: ["series", "tv", "live"]
+  },
+  {
+    title: "News Now",
+    category: "News",
+    url: "https://pluto.tv/",
+    accent: "#f4f4f4",
+    tags: ["news", "live", "updates"]
+  }
+];
+
+const drawers = {
+  launcher: document.getElementById("launcherDrawer"),
+  media: document.getElementById("mediaDrawer"),
+  web: document.getElementById("webDrawer"),
+  music: document.getElementById("musicDrawer"),
+  game: document.getElementById("gameDrawer"),
+  settings: document.getElementById("settingsDrawer")
+};
+
+const clockDay = document.getElementById("clockDay");
+const clockTime = document.getElementById("clockTime");
+const clockDate = document.getElementById("clockDate");
+const taskbarTime = document.getElementById("taskbarTime");
+const taskbarDate = document.getElementById("taskbarDate");
+const nowPlayingChip = document.getElementById("nowPlayingChip");
+const nowPlayingText = document.getElementById("nowPlayingText");
+const taskbarNowPlaying = document.getElementById("taskbarNowPlaying");
+const taskbarNowPlayingText = document.getElementById("taskbarNowPlayingText");
+
+const openLauncherButton = document.getElementById("openLauncherButton");
+const openMediaButton = document.getElementById("openMediaButton");
+const openMusicButton = document.getElementById("openMusicButton");
+const openSettingsButton = document.getElementById("openSettingsButton");
+const startButton = document.getElementById("startButton");
+const closePanelButtons = [...document.querySelectorAll("[data-close-panel]")];
+const panelOpenButtons = [...document.querySelectorAll("[data-open-panel]")];
+const gameLaunchButtons = [...document.querySelectorAll("[data-launch-game]")];
+const webButtons = [...document.querySelectorAll("[data-open-web]")];
+const switchButtons = [...document.querySelectorAll("[data-game-switch]")];
+const taskbarButtons = [
+  openLauncherButton,
+  openMediaButton,
+  openMusicButton,
+  openSettingsButton,
+  ...[...document.querySelectorAll(".taskbar-app[data-open-web]")]
+].filter(Boolean);
+
+const webTag = document.getElementById("webTag");
+const webTitle = document.getElementById("webTitle");
+const webDescription = document.getElementById("webDescription");
+const webUrlForm = document.getElementById("webUrlForm");
+const webUrlInput = document.getElementById("webUrlInput");
+const webNote = document.getElementById("webNote");
+const webWarning = document.getElementById("webWarning");
+const webWarningText = document.getElementById("webWarningText");
+const webFrame = document.getElementById("webFrame");
+const webReloadButton = document.getElementById("webReloadButton");
+const mediaTools = document.getElementById("mediaTools");
+const mediaEmbedForm = document.getElementById("mediaEmbedForm");
+const mediaEmbedInput = document.getElementById("mediaEmbedInput");
+
+const mediaSearchForm = document.getElementById("mediaSearchForm");
+const mediaSearchInput = document.getElementById("mediaSearchInput");
+const mediaProviderButtons = [...document.querySelectorAll("[data-media-provider]")];
+const mediaGrid = document.getElementById("mediaGrid");
+const mediaLoading = document.getElementById("mediaLoading");
+const mediaLoadMore = document.getElementById("mediaLoadMore");
+const mediaPlayer = document.getElementById("mediaPlayer");
+const mediaPlayerProvider = document.getElementById("mediaPlayerProvider");
+const mediaPlayerTitle = document.getElementById("mediaPlayerTitle");
+const mediaPlayerMeta = document.getElementById("mediaPlayerMeta");
+const mediaPlayerFrame = document.getElementById("mediaPlayerFrame");
+const mediaPlayerClose = document.getElementById("mediaPlayerClose");
+const mediaResultsTitle = document.getElementById("mediaResultsTitle");
+const mediaResultsCopy = document.getElementById("mediaResultsCopy");
+
+const gameScreens = [...document.querySelectorAll(".game-screen")];
+const activeCategory = document.getElementById("activeCategory");
+const activeTitle = document.getElementById("activeTitle");
+const activeDescription = document.getElementById("activeDescription");
+const activeBest = document.getElementById("activeBest");
+const activeControls = document.getElementById("activeControls");
+
+const audioElement = document.getElementById("velofyAudio");
+const velofyArtwork = document.getElementById("velofyArtwork");
+const velofyTitle = document.getElementById("velofyTitle");
+const velofyArtist = document.getElementById("velofyArtist");
+const velofyState = document.getElementById("velofyState");
+const velofyProgress = document.getElementById("velofyProgress");
+const velofyElapsed = document.getElementById("velofyElapsed");
+const velofyDuration = document.getElementById("velofyDuration");
+const velofyPrev = document.getElementById("velofyPrev");
+const velofyPlay = document.getElementById("velofyPlay");
+const velofyNext = document.getElementById("velofyNext");
+const velofyPlaylist = document.getElementById("velofyPlaylist");
+
+const settingsWallpaperButtons = [...document.querySelectorAll("[data-wallpaper-option]")];
+const settingsFontButtons = [...document.querySelectorAll("[data-font-option]")];
+
+let activeLocalGame = "snake";
+let activeWeb = "rocketgoal";
+let activePanel = "";
+let currentTrackIndex = 0;
+let currentWallpaperKey = storage.get("vel-wallpaper", "vel");
+let currentFontKey = storage.get("vel-font", "system");
+let currentWebUrl = "https://rocketgoal.io/";
+let feedVideoObserver = null;
+let youtubePlayer = null;
+let youtubeApiReadyPromise = null;
+let mediaSearchDebounceTimer = null;
+let mediaState = {
+  provider: storage.get("vel-media-tab", "all"),
+  query: storage.get("vel-media-last-query", ""),
+  youtubeResults: [],
+  youtubeNextPageToken: "",
+  youtubeError: "",
+  spotifyResults: { tracks: [], artists: [], albums: [], playlists: [] },
+  spotifyType: storage.get("vel-spotify-type", "track"),
+  spotifyError: "",
+  tiktokProfile: null,
+  tiktokVideos: [],
+  tiktokError: "",
+  tiktokAuthRequired: true,
+  loading: false
+};
+
+function setDrawerState(name, isOpen) {
+  const drawer = drawers[name];
+  if (!drawer) return;
+  drawer.setAttribute("aria-hidden", String(!isOpen));
+}
+
+function isDrawerOpen(name) {
+  return drawers[name]?.getAttribute("aria-hidden") === "false";
+}
+
+function syncTaskbarState() {
+  taskbarButtons.forEach((button) => button.classList.remove("is-active"));
+
+  if (activePanel === "launcher" || activePanel === "game") {
+    openLauncherButton?.classList.add("is-active");
+  }
+
+  if (activePanel === "music") {
+    openMusicButton?.classList.add("is-active");
+  }
+
+  if (activePanel === "media") {
+    openMediaButton?.classList.add("is-active");
+    if (mediaState.provider === "tiktok") {
+      document.querySelector('.taskbar-app[data-open-web="tiktok"]')?.classList.add("is-active");
+    }
+    if (mediaState.provider === "spotify") {
+      document.querySelector('.taskbar-app[data-open-web="spotify"]')?.classList.add("is-active");
+    }
+  }
+
+  if (activePanel === "settings") {
+    openSettingsButton?.classList.add("is-active");
+  }
+
+  if (activePanel === "web") {
+    const activeWebButton = document.querySelector(
+      `.taskbar-app[data-open-web="${activeWeb}"]`
+    );
+    activeWebButton?.classList.add("is-active");
+  }
+}
+
+function pauseDynamicGames(nextGame) {
+  if (nextGame !== "snake") {
+    snake.pause("Snake paused.");
+  }
+  if (nextGame !== "tap") {
+    tapRush.stop(false, "Tap Rush paused.");
+  }
+}
+
+function openPanel(name) {
+  if (name !== "media") {
+    pauseAllFeedMedia();
+  }
+
+  Object.keys(drawers).forEach((key) => {
+    setDrawerState(key, key === name);
+  });
+  activePanel = name;
+
+  if (name !== "game") {
+    pauseDynamicGames("");
+  }
+
+  syncTaskbarState();
+
+  if (name === "game" && activeLocalGame === "snake") {
+    window.requestAnimationFrame(() => {
+      snake.refresh();
+    });
+  }
+}
+
+function closeAllPanels() {
+  Object.keys(drawers).forEach((key) => setDrawerState(key, false));
+  activePanel = "";
+  pauseDynamicGames("");
+  pauseAllFeedMedia();
+  youtubePlayer?.destroy?.();
+  youtubePlayer = null;
+  syncTaskbarState();
+}
+
+function closePanel(name) {
+  setDrawerState(name, false);
+  if (name === "game") {
+    pauseDynamicGames("");
+  }
+  if (name === "media") {
+    pauseAllFeedMedia();
+    youtubePlayer?.destroy?.();
+    youtubePlayer = null;
+  }
+  if (activePanel === name) {
+    activePanel = "";
+  }
+  syncTaskbarState();
+}
+
+function togglePanel(name) {
+  if (isDrawerOpen(name)) {
+    closePanel(name);
+    return;
+  }
+  openPanel(name);
+}
+
+function formatTime(date) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function updateClock() {
+  const now = new Date();
+  clockDay.textContent = new Intl.DateTimeFormat(undefined, {
+    weekday: "long"
+  }).format(now);
+  clockTime.textContent = formatTime(now);
+  clockDate.textContent = new Intl.DateTimeFormat(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(now);
+
+  taskbarTime.textContent = formatTime(now);
+  taskbarDate.textContent = new Intl.DateTimeFormat(undefined, {
+    weekday: "short"
+  }).format(now);
+}
+
+function applyWallpaper(key) {
+  const nextKey = wallpaperOptions[key] ? key : "vel";
+  const choice = wallpaperOptions[nextKey];
+  currentWallpaperKey = nextKey;
+
+  document.documentElement.style.setProperty(
+    "--wallpaper-image",
+    `url("${choice.path}")`
+  );
+  velofyArtwork.src = choice.path;
+  velofyArtwork.alt = `${choice.label} wallpaper`;
+
+  settingsWallpaperButtons.forEach((button) => {
+    button.classList.toggle(
+      "is-active",
+      button.dataset.wallpaperOption === nextKey
+    );
+  });
+
+  storage.set("vel-wallpaper", nextKey);
+}
+
+function applyFont(key) {
+  const nextKey = ["system", "serif", "rounded"].includes(key)
+    ? key
+    : "system";
+  currentFontKey = nextKey;
+
+  document.body.dataset.font = nextKey;
+  settingsFontButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.fontOption === nextKey);
+  });
+
+  storage.set("vel-font", nextKey);
+}
+
+function updateNowPlayingUi() {
+  const track = velofyTracks[currentTrackIndex];
+  const isPlaying = !audioElement.paused;
+  const text = `${track.title} - ${track.artist}`;
+
+  nowPlayingChip.hidden = !isPlaying;
+  taskbarNowPlaying.hidden = !isPlaying;
+  nowPlayingText.textContent = text;
+  taskbarNowPlayingText.textContent = track.title;
+  document.body.classList.toggle("is-music-playing", isPlaying);
+  velofyState.textContent = isPlaying ? "Playing" : "Paused";
+  velofyPlay.textContent = isPlaying ? "Pause" : "Play";
+}
+
+function formatSeconds(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function loadTrack(index, shouldPlay = false) {
+  currentTrackIndex = (index + velofyTracks.length) % velofyTracks.length;
+  const track = velofyTracks[currentTrackIndex];
+  audioElement.src = track.src;
+  velofyTitle.textContent = track.title;
+  velofyArtist.textContent = track.artist;
+  velofyPlaylist
+    .querySelectorAll(".track-button")
+    .forEach((button, buttonIndex) => {
+      button.classList.toggle("is-active", buttonIndex === currentTrackIndex);
+    });
+
+  if (shouldPlay) {
+    audioElement
+      .play()
+      .then(updateNowPlayingUi)
+      .catch(() => updateNowPlayingUi());
+  } else {
+    audioElement.load();
+    updateNowPlayingUi();
+  }
+}
+
+function renderPlaylist() {
+  velofyPlaylist.innerHTML = "";
+  velofyTracks.forEach((track, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `track-button${index === currentTrackIndex ? " is-active" : ""}`;
+    button.dataset.trackIndex = String(index);
+    button.innerHTML = `
+      <strong>${track.title}</strong>
+      <span>${track.artist}</span>
+    `;
+    velofyPlaylist.appendChild(button);
+  });
+}
+
+function setActiveLocalGame(gameId, displayMeta = null) {
+  const meta = displayMeta ?? localGameMeta[gameId];
+  if (!meta || !localGameMeta[gameId]) return;
+
+  activeLocalGame = gameId;
+  pauseDynamicGames(gameId);
+
+  activeCategory.textContent = meta.category;
+  activeTitle.textContent = meta.title;
+  activeDescription.textContent = meta.description;
+  activeBest.textContent = meta.best;
+  activeControls.textContent = meta.controls;
+
+  switchButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.gameSwitch === gameId);
+  });
+
+  gameScreens.forEach((screen) => {
+    screen.classList.toggle("is-active", screen.dataset.screen === gameId);
+  });
+
+  if (gameId === "snake") {
+    window.requestAnimationFrame(() => {
+      snake.refresh();
+    });
+  }
+}
+
+function openGame(gameId, displayMeta = null) {
+  setActiveLocalGame(gameId, displayMeta);
+  openPanel("game");
+}
+
+function normalizeUrl(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return "about:blank";
+  if (trimmed === "about:blank") return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (!trimmed.includes(".") || /\s/.test(trimmed)) {
+    return `https://www.bing.com/search?q=${encodeURIComponent(trimmed)}`;
+  }
+  return `https://${trimmed}`;
+}
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function makeBlockedFrame(app, url) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #050505;
+        color: #f5f5f5;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      main {
+        width: min(560px, calc(100% - 32px));
+        padding: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.05);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 6vw, 46px);
+      }
+      p {
+        margin: 0;
+        color: #b7b7b7;
+        line-height: 1.6;
+      }
+      a {
+        display: none;
+        margin-top: 22px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: #fff;
+        color: #050505;
+        font-weight: 700;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>${app.title}</h1>
+      <p>${app.note}</p>
+    </main>
+  </body>
+</html>`;
+}
+
+function makeVideoPromptFrame(app) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #050505;
+        color: #f5f5f5;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      main {
+        width: min(620px, calc(100% - 32px));
+        padding: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.05);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 6vw, 46px);
+      }
+      p {
+        margin: 0;
+        color: #b7b7b7;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>${app.title}</h1>
+      <p>${app.note}</p>
+      <p>Paste a specific ${app.title} video link above, then press Embed Video.</p>
+    </main>
+  </body>
+</html>`;
+}
+
+function extractYouTubeId(value) {
+  const trimmed = value.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+
+  try {
+    const url = new URL(normalizeUrl(trimmed));
+    if (url.hostname.includes("youtu.be")) {
+      return url.pathname.split("/").filter(Boolean)[0] || "";
+    }
+    if (url.searchParams.get("v")) {
+      return url.searchParams.get("v");
+    }
+    const embedMatch = url.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/);
+    return embedMatch?.[1] || "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function extractTikTokId(value) {
+  const trimmed = value.trim();
+  if (/^\d{8,}$/.test(trimmed)) return trimmed;
+  const match = trimmed.match(/\/video\/(\d+)/);
+  return match?.[1] || "";
+}
+
+function buildVideoEmbedUrl(provider, value) {
+  if (provider === "youtube") {
+    const id = extractYouTubeId(value);
+    return id ? `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&playsinline=1` : "";
+  }
+
+  if (provider === "tiktok") {
+    const id = extractTikTokId(value);
+    return id ? `https://www.tiktok.com/player/v1/${id}?controls=1&music_info=1&description=1` : "";
+  }
+
+  return "";
+}
+
+function getMediaQuery() {
+  return mediaState.query.trim().toLowerCase();
+}
+
+function providerLabel(provider) {
+  const labels = {
+    all: "All",
+    youtube: "YouTube",
+    spotify: "Spotify",
+    tiktok: "TikTok"
+  };
+  return labels[provider] || "All";
+}
+
+function mediaMatches(item, fields) {
+  const query = getMediaQuery();
+  if (!query) return true;
+  return fields.some((field) => String(item[field] || "").toLowerCase().includes(query))
+    || (item.tags || []).some((tag) => tag.toLowerCase().includes(query));
+}
+
+function renderSkeletonCards(count = 6) {
+  return Array.from({ length: count }, (_, index) => `
+    <article class="media-card is-skeleton" aria-label="Loading result ${index + 1}">
+      <div class="media-card-thumb"></div>
+      <div class="media-card-body">
+        <span class="media-provider-line"></span>
+        <span class="media-title-line"></span>
+        <span class="media-meta-line"></span>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderEmptyCard(title, message) {
+  return `
+    <article class="media-card media-empty-card">
+      <div class="media-card-body">
+        <p class="section-label">Nothing Found</p>
+        <h4>${escapeHtml(title)}</h4>
+        <p>${escapeHtml(message)}</p>
+      </div>
+    </article>
+  `;
+}
+
+function getStoredList(key) {
+  try {
+    return JSON.parse(storage.get(key, "[]"));
+  } catch (error) {
+    return [];
+  }
+}
+
+function setStoredList(key, list) {
+  storage.set(key, JSON.stringify(list.slice(0, 12)));
+}
+
+function saveMediaSearch(provider, query) {
+  if (!query) return;
+  const key = `vel-${provider}-recent-searches`;
+  setStoredList(key, [query, ...getStoredList(key).filter((item) => item !== query)]);
+}
+
+function saveMediaHistory(item) {
+  setStoredList("vel-media-history", [
+    { ...item, savedAt: Date.now() },
+    ...getStoredList("vel-media-history").filter((entry) => entry.id !== item.id || entry.provider !== item.provider)
+  ]);
+}
+
+async function searchYouTube({ append = false } = {}) {
+  const query = mediaState.query.trim() || "music";
+  const params = new URLSearchParams({ q: query });
+  if (append && mediaState.youtubeNextPageToken) {
+    params.set("pageToken", mediaState.youtubeNextPageToken);
+  }
+
+  mediaState.loading = true;
+  mediaState.youtubeError = "";
+  renderMediaHub();
+
+  try {
+    const response = await fetch(`/api/youtube/search?${params}`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "YouTube search failed.");
+    }
+    const nextResults = data.items || [];
+    mediaState.youtubeResults = append
+      ? [...mediaState.youtubeResults, ...nextResults]
+      : nextResults;
+    mediaState.youtubeNextPageToken = data.nextPageToken || "";
+    saveMediaSearch("youtube", query);
+  } catch (error) {
+    mediaState.youtubeError = error.message || "YouTube search could not load.";
+  } finally {
+    mediaState.loading = false;
+    renderMediaHub();
+  }
+}
+
+function renderYouTubeCards() {
+  if (mediaState.loading && !mediaState.youtubeResults.length) {
+    return renderSkeletonCards(6);
+  }
+
+  if (mediaState.youtubeError) {
+    return `
+      <article class="media-card media-config-card">
+        <div class="media-card-thumb media-logo-thumb youtube-thumb">YT</div>
+        <div class="media-card-body">
+          <p class="section-label">YouTube Error</p>
+          <h4>Search did not load.</h4>
+          <p>${escapeHtml(mediaState.youtubeError)}</p>
+          <button class="media-card-action" type="button" data-media-retry="youtube">Retry YouTube</button>
+        </div>
+      </article>
+    `;
+  }
+
+  if (!mediaState.youtubeResults.length) return "";
+
+  return mediaState.youtubeResults.map((video) => `
+    <article class="media-card" data-media-kind="youtube" data-youtube-id="${escapeHtml(video.id)}" role="button" tabindex="0" aria-label="Play ${escapeHtml(video.title)} on YouTube">
+      <div class="media-card-thumb">
+        <img src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy" />
+        <span class="media-play-pill">Play</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">YouTube</p>
+        <h4>${escapeHtml(video.title)}</h4>
+        <p>${escapeHtml(video.channel)}</p>
+      </div>
+    </article>
+  `).join("");
+}
+
+function loadYouTubeIframeApi() {
+  if (window.YT?.Player) return Promise.resolve();
+  if (youtubeApiReadyPromise) return youtubeApiReadyPromise;
+
+  youtubeApiReadyPromise = new Promise((resolve) => {
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      previousReady?.();
+      resolve();
+    };
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
+    document.head.appendChild(script);
+  });
+
+  return youtubeApiReadyPromise;
+}
+
+async function openYouTubePlayer(video) {
+  mediaPlayer.hidden = false;
+  mediaPlayerProvider.textContent = "YouTube";
+  mediaPlayerTitle.textContent = video.title;
+  mediaPlayerMeta.textContent = video.channel || "Official YouTube player";
+  mediaPlayerFrame.innerHTML = '<div id="youtubeApiPlayer" class="media-api-player"></div>';
+  saveMediaHistory({ provider: "youtube", id: video.id, title: video.title, subtitle: video.channel });
+  mediaPlayer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  await loadYouTubeIframeApi();
+  youtubePlayer?.destroy?.();
+  youtubePlayer = new YT.Player("youtubeApiPlayer", {
+    videoId: video.id,
+    playerVars: {
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1
+    }
+  });
+  mediaPlayerClose?.focus({ preventScroll: true });
+}
+
+async function searchSpotify() {
+  const query = mediaState.query.trim() || "lofi";
+  const params = new URLSearchParams({
+    q: query,
+    type: mediaState.spotifyType === "all" ? "track,artist,album,playlist" : mediaState.spotifyType
+  });
+
+  mediaState.loading = true;
+  mediaState.spotifyError = "";
+  renderMediaHub();
+
+  try {
+    const response = await fetch(`/api/spotify/search?${params}`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Spotify search failed.");
+    }
+    mediaState.spotifyResults = data;
+    saveMediaSearch("spotify", query);
+  } catch (error) {
+    mediaState.spotifyError = error.message || "Spotify search could not load.";
+    mediaState.spotifyResults = { tracks: [], artists: [], albums: [], playlists: [] };
+  } finally {
+    mediaState.loading = false;
+    renderMediaHub();
+  }
+}
+
+function getSpotifyItems() {
+  if (mediaState.spotifyType === "track") return mediaState.spotifyResults.tracks || [];
+  if (mediaState.spotifyType === "artist") return mediaState.spotifyResults.artists || [];
+  if (mediaState.spotifyType === "album") return mediaState.spotifyResults.albums || [];
+  if (mediaState.spotifyType === "playlist") return mediaState.spotifyResults.playlists || [];
+  return [
+    ...(mediaState.spotifyResults.tracks || []),
+    ...(mediaState.spotifyResults.artists || []),
+    ...(mediaState.spotifyResults.albums || []),
+    ...(mediaState.spotifyResults.playlists || [])
+  ];
+}
+
+function renderSpotifyCards() {
+  if (mediaState.loading && !getSpotifyItems().length) {
+    return renderSkeletonCards(6);
+  }
+
+  if (mediaState.spotifyError) {
+    return `
+      <article class="media-card media-config-card">
+        <div class="media-card-thumb media-logo-thumb">SP</div>
+        <div class="media-card-body">
+          <p class="section-label">Spotify Error</p>
+          <h4>Search did not load.</h4>
+          <p>${escapeHtml(mediaState.spotifyError)}</p>
+          <button class="media-card-action" type="button" data-media-retry="spotify">Retry Spotify</button>
+        </div>
+      </article>
+    `;
+  }
+
+  const tabs = `
+    <div class="media-filter-row" role="tablist" aria-label="Spotify result type">
+      ${[
+        ["track", "Tracks"],
+        ["artist", "Artists"],
+        ["album", "Albums"],
+        ["playlist", "Playlists"]
+      ].map(([type, label]) => `
+        <button class="switch-chip ${mediaState.spotifyType === type ? "is-active" : ""}" type="button" data-spotify-type="${type}">
+          ${label}
+        </button>
+      `).join("")}
+    </div>
+  `;
+
+  const items = getSpotifyItems();
+  if (!items.length) {
+    return tabs + renderEmptyCard("No Spotify results", "Search for a track, artist, album, or playlist.");
+  }
+
+  return tabs + items.map((item) => `
+    <article class="media-card" data-media-kind="spotify" data-spotify-id="${escapeHtml(item.id)}" data-spotify-type="${escapeHtml(item.type)}" role="button" tabindex="0" aria-label="${item.playable ? "Play" : "View"} ${escapeHtml(item.title)} on Spotify">
+      <div class="media-card-thumb media-poster-thumb" style="--poster-accent: #1db954">
+        ${item.image ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" />` : "<span>Spotify</span>"}
+        ${item.playable ? '<span class="media-play-pill">Play</span>' : ""}
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">Spotify ${escapeHtml(item.type)}</p>
+        <h4>${escapeHtml(item.title)}</h4>
+        <p>${escapeHtml(item.subtitle || "Spotify")}</p>
+      </div>
+    </article>
+  `).join("");
+}
+
+function openSpotifyPlayer(item) {
+  if (!item.playable) {
+    openMediaPlayer({
+      provider: "Spotify",
+      title: item.title,
+      meta: "Artist pages are metadata-only here. Tracks, albums, and playlists support embeds.",
+      src: "about:blank"
+    });
+    mediaPlayerFrame.innerHTML = renderEmptyCard("Spotify artist selected", "Choose a track, album, or playlist to open an official Spotify embed.");
+    return;
+  }
+
+  const embedType = item.type === "track" ? "track" : item.type === "album" ? "album" : "playlist";
+  saveMediaHistory({ provider: "spotify", id: item.id, title: item.title, subtitle: item.subtitle });
+  openMediaPlayer({
+    provider: "Spotify",
+    title: item.title,
+    meta: `${item.type} - Spotify Embed. Premium is only required for future Web Playback SDK control.`,
+    src: `https://open.spotify.com/embed/${embedType}/${item.id}`
+  });
+}
+
+function renderFeedVideo(item, index) {
+  const soundtrack = item.audioSrc || velofyTracks[index % velofyTracks.length]?.src || "";
+  return `
+    <video
+      class="feed-video"
+      src="${escapeHtml(item.src)}"
+      preload="${index === 0 ? "auto" : "metadata"}"
+      controls
+      loop
+      playsinline
+      data-feed-video>
+    </video>
+    ${soundtrack ? `
+      <audio
+        class="feed-audio"
+        src="${escapeHtml(soundtrack)}"
+        preload="${index === 0 ? "auto" : "metadata"}"
+        loop
+        data-feed-audio>
+      </audio>
+    ` : ""}
+  `;
+}
+
+function renderFeedTags(tags = []) {
+  return tags
+    .slice(0, 4)
+    .map((tag) => `#${escapeHtml(tag.replace(/\s+/g, ""))}`)
+    .join(" ");
+}
+
+function formatFeedCount(index, offset = 0) {
+  const count = 1400 + (((index + 3) * 1879 + offset * 7331) % 196000);
+  return count >= 100000
+    ? `${Math.round(count / 1000)}K`
+    : `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}K`;
+}
+
+function getFilteredTikToks() {
+  return mediaTikTokCatalog.filter((item) => mediaMatches(item, ["title", "creator"]));
+}
+
+function getFilteredShorts() {
+  return mediaShortsCatalog.filter((item) => mediaMatches(item, ["title", "channel"]));
+}
+
+function renderShortsCards() {
+  const cards = getFilteredShorts();
+  return cards.map((item, index) => `
+    <article class="media-card" data-media-kind="shorts" data-video-index="${index}" tabindex="0">
+      <div class="media-card-thumb media-shorts-thumb" style="--card-accent: ${escapeHtml(item.poster)}">
+        <span class="media-play-pill">Scroll</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">Shorts</p>
+        <h4>${escapeHtml(item.title)}</h4>
+        <p>${escapeHtml(item.channel)} - vertical feed</p>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderShortsFeed() {
+  const cards = getFilteredShorts();
+  if (!cards.length) return "";
+
+  return `
+    <section class="tiktok-feed shorts-feed" aria-label="Scrollable Shorts feed">
+      ${cards.map((item, index) => `
+        <article class="tiktok-feed-card shorts-feed-card">
+          <div class="tiktok-phone shorts-phone">
+            ${renderFeedVideo(item, index)}
+            <div class="feed-overlay">
+              <strong>${escapeHtml(item.channel)}</strong>
+              <span>${escapeHtml(item.title)}</span>
+              <small>${renderFeedTags(item.tags)}</small>
+            </div>
+          </div>
+        </article>
+      `).join("")}
+    </section>
+  `;
+}
+
+async function loadTikTokData() {
+  mediaState.loading = true;
+  mediaState.tiktokError = "";
+  mediaState.tiktokAuthRequired = false;
+  renderMediaHub();
+
+  try {
+    const [profileResponse, videosResponse] = await Promise.all([
+      fetch("/api/tiktok/profile"),
+      fetch("/api/tiktok/videos")
+    ]);
+    const profile = await profileResponse.json();
+    const videos = await videosResponse.json();
+
+    if (profileResponse.status === 401 || videosResponse.status === 401) {
+      mediaState.tiktokAuthRequired = true;
+      mediaState.tiktokProfile = null;
+      mediaState.tiktokVideos = [];
+      return;
+    }
+
+    if (!profileResponse.ok) throw new Error(profile.message || "TikTok profile could not load.");
+    if (!videosResponse.ok) throw new Error(videos.message || "TikTok videos could not load.");
+
+    mediaState.tiktokProfile = profile;
+    mediaState.tiktokVideos = videos.videos || [];
+  } catch (error) {
+    mediaState.tiktokError = error.message || "TikTok could not load.";
+  } finally {
+    mediaState.loading = false;
+    renderMediaHub();
+  }
+}
+
+function renderTikTokConnectCard() {
+  return `
+    <article class="media-card media-config-card">
+      <div class="media-card-thumb media-logo-thumb">
+        <img class="media-provider-logo" src="./assets/images/apps/tiktok.svg" alt="" loading="lazy" />
+        <span>TikTok</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">TikTok Login Kit</p>
+        <h4>Connect TikTok to show profile videos.</h4>
+        <p>TikTok does not provide an official global For You feed API. This uses authorized profile/videos only.</p>
+        <button class="media-card-action" type="button" data-tiktok-connect>Connect TikTok</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderTikTokCards() {
+  if (mediaState.loading && !mediaState.tiktokVideos.length) return renderSkeletonCards(4);
+  if (mediaState.tiktokAuthRequired) return renderTikTokConnectCard();
+  if (mediaState.tiktokError) {
+    return `
+      <article class="media-card media-config-card">
+        <div class="media-card-thumb media-logo-thumb">
+          <img class="media-provider-logo" src="./assets/images/apps/tiktok.svg" alt="" loading="lazy" />
+          <span>TikTok</span>
+        </div>
+        <div class="media-card-body">
+          <p class="section-label">TikTok Error</p>
+          <h4>TikTok could not load.</h4>
+          <p>${escapeHtml(mediaState.tiktokError)}</p>
+          <button class="media-card-action" type="button" data-media-retry="tiktok">Retry TikTok</button>
+          <button class="media-card-action" type="button" data-tiktok-connect>Reconnect TikTok</button>
+        </div>
+      </article>
+    `;
+  }
+
+  const profile = mediaState.tiktokProfile;
+  const query = getMediaQuery();
+  const videos = query
+    ? mediaState.tiktokVideos.filter((video) =>
+        [video.title, video.video_description, video.share_url]
+          .some((field) => String(field || "").toLowerCase().includes(query))
+      )
+    : mediaState.tiktokVideos;
+  const profileCard = profile ? `
+    <article class="media-card media-config-card">
+      <div class="media-card-thumb media-logo-thumb">
+        ${profile.avatar_url ? `<img class="media-provider-logo" src="${escapeHtml(profile.avatar_url)}" alt="" loading="lazy" />` : '<img class="media-provider-logo" src="./assets/images/apps/tiktok.svg" alt="" loading="lazy" />'}
+        <span>TikTok</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">Connected Profile</p>
+        <h4>${escapeHtml(profile.display_name || profile.username || "TikTok Creator")}</h4>
+        <p>${escapeHtml(profile.bio_description || "Authorized TikTok Display API profile.")}</p>
+      </div>
+    </article>
+  ` : "";
+
+  if (!videos.length) {
+    return profileCard + renderEmptyCard("No TikTok videos", "This connected account has no public recent videos available through Display API.");
+  }
+
+  return profileCard + videos.map((video) => `
+    <article class="media-card" data-media-kind="tiktok" data-tiktok-video-id="${escapeHtml(video.id)}" role="button" tabindex="0" aria-label="View ${escapeHtml(video.title || video.video_description || "TikTok video")}">
+      <div class="media-card-thumb">
+        ${video.cover_image_url ? `<img src="${escapeHtml(video.cover_image_url)}" alt="" loading="lazy" />` : '<img src="./assets/images/apps/tiktok.svg" alt="" loading="lazy" />'}
+        <span class="media-play-pill">View</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">TikTok</p>
+        <h4>${escapeHtml(video.title || video.video_description || "TikTok video")}</h4>
+        <p>${video.duration ? `${escapeHtml(video.duration)}s` : "Official Display API video"}</p>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderTikTokFeed() {
+  return renderTikTokCards();
+}
+
+function renderTubiCards() {
+  const cards = mediaTubiCatalog.filter((item) => mediaMatches(item, ["title", "genre"]));
+  return cards.map((item, index) => `
+    <article class="media-card is-tubi">
+      <div class="media-card-thumb media-poster-thumb" style="--poster-accent: ${escapeHtml(item.accent)}">
+        <img class="media-provider-logo" src="./assets/images/apps/tubi.png" alt="" loading="lazy" />
+        <span>Tubi</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">Tubi</p>
+        <h4>${escapeHtml(item.title)}</h4>
+        <p>${escapeHtml(item.genre)} - Starter catalog item ${index + 1}</p>
+        <p>${escapeHtml(item.genre)} · Starter catalog item ${index + 1}</p>
+        <a class="media-card-action" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Watch on Tubi</a>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderPlutoCards() {
+  const cards = mediaPlutoCatalog.filter((item) => mediaMatches(item, ["title", "category"]));
+  return cards.map((item, index) => `
+    <article class="media-card is-pluto">
+      <div class="media-card-thumb media-poster-thumb" style="--poster-accent: ${escapeHtml(item.accent)}">
+        <img class="media-provider-logo" src="./assets/images/apps/pluto.jpg" alt="" loading="lazy" />
+        <span>Pluto</span>
+      </div>
+      <div class="media-card-body">
+        <p class="section-label">Pluto TV</p>
+        <h4>${escapeHtml(item.title)}</h4>
+        <p>${escapeHtml(item.category)} - Starter channel ${index + 1}</p>
+        <p>${escapeHtml(item.category)} · Starter channel ${index + 1}</p>
+        <a class="media-card-action" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Watch on Pluto TV</a>
+      </div>
+    </article>
+  `).join("");
+}
+
+function openMediaPlayer({ provider, title, meta, src }) {
+  mediaPlayer.hidden = false;
+  mediaPlayerProvider.textContent = provider;
+  mediaPlayerTitle.textContent = title;
+  mediaPlayerMeta.textContent = meta;
+  mediaPlayerFrame.innerHTML = `
+    <iframe
+      title="${escapeHtml(title)}"
+      src="${escapeHtml(src)}"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
+      allowfullscreen>
+    </iframe>
+  `;
+  mediaPlayer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  mediaPlayerClose?.focus({ preventScroll: true });
+}
+
+function renderTikTokEmbed() {
+  openMediaProvider("tiktok");
+}
+
+function openTikTokPlayer(video) {
+  saveMediaHistory({
+    provider: "tiktok",
+    id: video.id,
+    title: video.title || video.video_description || "TikTok video",
+    subtitle: video.share_url || ""
+  });
+
+  mediaPlayer.hidden = false;
+  mediaPlayerProvider.textContent = "TikTok";
+  mediaPlayerTitle.textContent = video.title || video.video_description || "TikTok video";
+  mediaPlayerMeta.textContent = "Official TikTok Display API video";
+
+  if (video.embed_link) {
+    mediaPlayerFrame.innerHTML = `
+      <iframe
+        title="${escapeHtml(video.title || "TikTok video")}"
+        src="${escapeHtml(video.embed_link)}"
+        allow="encrypted-media; fullscreen; picture-in-picture; web-share"
+        allowfullscreen>
+      </iframe>
+    `;
+  } else if (video.id) {
+    mediaPlayerFrame.innerHTML = `
+      <iframe
+        title="${escapeHtml(video.title || "TikTok video")}"
+        src="${escapeHtml(buildVideoEmbedUrl("tiktok", video.id))}"
+        allow="encrypted-media; fullscreen; picture-in-picture; web-share"
+        allowfullscreen>
+      </iframe>
+    `;
+  } else {
+    mediaPlayerFrame.innerHTML = `
+      <article class="media-card media-empty-card">
+        <div class="media-card-body">
+          <p class="section-label">TikTok</p>
+          <h4>Embed unavailable for this post.</h4>
+          <p>Use the canonical TikTok link when TikTok does not provide an embed link.</p>
+          ${video.share_url ? `<a class="media-card-action" href="${escapeHtml(video.share_url)}" target="_blank" rel="noopener">Open TikTok Link</a>` : ""}
+        </div>
+      </article>
+    `;
+  }
+
+  mediaPlayer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  mediaPlayerClose?.focus({ preventScroll: true });
+}
+
+function getFeedAudio(video) {
+  return video.closest(".tiktok-phone")?.querySelector("[data-feed-audio]") || null;
+}
+
+function playFeedMedia(video) {
+  const audio = getFeedAudio(video);
+  video.muted = false;
+  video.volume = 1;
+  video.play().catch(() => {
+    video.muted = true;
+    video.play().catch(() => {});
+  });
+
+  if (!audio) return;
+  audio.muted = false;
+  audio.volume = 0.9;
+  audio.play().catch(() => {});
+}
+
+function pauseFeedMedia(video) {
+  const audio = getFeedAudio(video);
+  video.pause();
+  audio?.pause();
+}
+
+function pauseAllFeedMedia() {
+  document.querySelectorAll("[data-feed-video]").forEach((video) => {
+    if (video instanceof HTMLVideoElement) {
+      pauseFeedMedia(video);
+    }
+  });
+}
+
+function hydrateFeedVideos() {
+  const videos = [...document.querySelectorAll("[data-feed-video]")];
+  if (feedVideoObserver) {
+    feedVideoObserver.disconnect();
+    feedVideoObserver = null;
+  }
+
+  if (!videos.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    playFeedMedia(videos[0]);
+    return;
+  }
+
+  feedVideoObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target;
+        if (!(video instanceof HTMLVideoElement)) return;
+
+        if (entry.isIntersecting && entry.intersectionRatio > 0.62) {
+          playFeedMedia(video);
+        } else {
+          pauseFeedMedia(video);
+        }
+      });
+    },
+    { threshold: [0, 0.35, 0.62, 0.9] }
+  );
+
+  videos.forEach((video) => feedVideoObserver.observe(video));
+}
+
+function renderMediaHub() {
+  if (!mediaGrid) return;
+
+  mediaProviderButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.mediaProvider === mediaState.provider);
+  });
+
+  const provider = mediaState.provider;
+  const sections = [];
+
+  if (provider === "all" || provider === "youtube") {
+    sections.push(renderYouTubeCards());
+  }
+  if (provider === "all" || provider === "spotify") {
+    sections.push(renderSpotifyCards());
+  }
+  if (provider === "all" || provider === "tiktok") {
+    sections.push(renderTikTokCards());
+  }
+
+  const html = sections.filter(Boolean).join("");
+  mediaGrid.innerHTML = html || renderEmptyCard(
+    "No matching media",
+    "Try a different search or switch to All."
+  );
+
+  mediaLoading.hidden = !mediaState.loading;
+  mediaResultsTitle.textContent = `${providerLabel(provider)} Results`;
+  if (provider === "spotify") {
+    mediaResultsCopy.textContent =
+      "Spotify metadata comes from the Web API. Playback uses official Spotify embeds; Web Playback SDK can be added later for Premium users.";
+  } else if (provider === "tiktok") {
+    mediaResultsCopy.textContent =
+      "TikTok uses official Login Kit and Display API. TikTok does not provide an official global For You feed API.";
+  } else {
+    mediaResultsCopy.textContent =
+      provider === "youtube"
+        ? "YouTube metadata comes from /api/youtube/search and playback uses the YouTube IFrame Player API."
+        : "Search real YouTube and Spotify results, or connect TikTok to show authorized profile videos.";
+  }
+
+  mediaLoadMore.hidden =
+    (provider !== "youtube" && provider !== "all") ||
+    !mediaState.youtubeNextPageToken ||
+    mediaState.loading;
+
+  window.requestAnimationFrame(hydrateFeedVideos);
+}
+
+function handleMediaSearch(value) {
+  const query = value.trim();
+  const youtubeId = extractYouTubeId(query);
+  const tiktokId = extractTikTokId(query);
+  storage.set("vel-media-last-query", query);
+
+  if (youtubeId) {
+    openYouTubePlayer({ id: youtubeId, title: "YouTube Video", channel: "Official YouTube player" });
+    return;
+  }
+
+  if (tiktokId && (mediaState.provider === "tiktok" || mediaState.provider === "all")) {
+    openTikTokPlayer({
+      id: tiktokId,
+      title: "TikTok post",
+      embed_link: buildVideoEmbedUrl("tiktok", tiktokId),
+      share_url: query
+    });
+    return;
+  }
+
+  mediaState.query = query;
+  mediaState.youtubeNextPageToken = "";
+  mediaState.youtubeResults = [];
+
+  if (mediaState.provider === "youtube" || mediaState.provider === "all") {
+    searchYouTube();
+  }
+  if (mediaState.provider === "spotify" || mediaState.provider === "all") {
+    searchSpotify();
+  }
+  if (mediaState.provider === "tiktok") {
+    loadTikTokData();
+  }
+  if (!["youtube", "spotify", "all", "tiktok"].includes(mediaState.provider)) {
+    renderMediaHub();
+  }
+}
+
+function openMediaProvider(provider) {
+  mediaState.provider = provider;
+  storage.set("vel-media-tab", provider);
+  mediaState.youtubeNextPageToken = "";
+  if (provider === "youtube" || provider === "all") searchYouTube();
+  if (provider === "spotify" || provider === "all") searchSpotify();
+  if (provider === "tiktok") loadTikTokData();
+  renderMediaHub();
+  openPanel("media");
+}
+
+function selectMediaCard(card) {
+  if (!card) return;
+
+  if (card.dataset.mediaRetry === "youtube") {
+    searchYouTube();
+    return;
+  }
+
+  if (card.dataset.mediaRetry === "spotify") {
+    searchSpotify();
+    return;
+  }
+
+  if (card.dataset.mediaRetry === "tiktok") {
+    loadTikTokData();
+    return;
+  }
+
+  if (card.dataset.spotifyType) {
+    mediaState.spotifyType = card.dataset.spotifyType;
+    storage.set("vel-spotify-type", mediaState.spotifyType);
+    searchSpotify();
+    return;
+  }
+
+  if (card.dataset.tiktokConnect !== undefined) {
+    window.location.href = "/api/tiktok/auth/start";
+    return;
+  }
+
+  const directTikTokButton = card.matches?.("button[data-media-kind='tiktok']")
+    ? card
+    : null;
+  if (directTikTokButton) {
+    openMediaProvider("tiktok");
+    return;
+  }
+
+  if (card.dataset.mediaKind === "youtube") {
+    const video = mediaState.youtubeResults.find(
+      (item) => item.id === card.dataset.youtubeId
+    );
+    if (!video) return;
+    openYouTubePlayer(video);
+    return;
+  }
+
+  if (card.dataset.mediaKind === "spotify") {
+    const item = getSpotifyItems().find((entry) => entry.id === card.dataset.spotifyId && entry.type === card.dataset.spotifyType);
+    if (item) openSpotifyPlayer(item);
+    return;
+  }
+
+  if (card.dataset.mediaKind === "tiktok") {
+    const video = mediaState.tiktokVideos.find((item) => item.id === card.dataset.tiktokVideoId);
+    if (video) openTikTokPlayer(video);
+  }
+}
+
+function setWebWindow(app, url) {
+  currentWebUrl = url;
+  webTag.textContent = app.tag;
+  webTitle.textContent = app.title;
+  webDescription.textContent = app.description;
+  webUrlInput.value = url === "about:blank" ? "" : url;
+  webNote.textContent = app.note;
+  mediaTools.hidden = app.mode !== "videoEmbed";
+  if (app.mode === "videoEmbed") {
+    mediaEmbedInput.value = "";
+    mediaEmbedInput.placeholder = `Paste a ${app.title} video link or ID`;
+  }
+  webWarning.hidden = !app.embedBlocked;
+  webWarningText.textContent = app.embedBlocked
+    ? app.note
+    : "The site should load here inside vel.os. Some websites still block iframe apps.";
+  if (app.mode === "videoEmbed") {
+    webFrame.removeAttribute("src");
+    webFrame.srcdoc = makeVideoPromptFrame(app);
+  } else if (app.embedBlocked) {
+    webFrame.removeAttribute("src");
+    webFrame.srcdoc = makeBlockedFrame(app, url);
+  } else {
+    webFrame.removeAttribute("srcdoc");
+    webFrame.src = url;
+  }
+}
+
+function openWebApp(appId) {
+  const app = webApps[appId];
+  if (!app) return;
+
+  activeWeb = appId;
+  setWebWindow(app, app.url);
+  openPanel("web");
+}
+
+function openCustomWebUrl(value) {
+  const url = normalizeUrl(value);
+  activeWeb = "browser";
+  const isSearch = url.includes("bing.com/search");
+  setWebWindow(
+    {
+      title: isSearch ? "Search" : "Web Browser",
+      tag: isSearch ? "Search" : "URL Launcher",
+      description: isSearch
+        ? `Search results for "${value.trim()}".`
+        : "Custom URL opened inside vel.os.",
+      embedBlocked: false,
+      note: "This is not a bypass proxy. If a site blocks embedding or your network blocks it, vel.os cannot override that from a static page."
+    },
+    url
+  );
+  openPanel("web");
+}
+
+openLauncherButton?.addEventListener("click", () => {
+  togglePanel("launcher");
+});
+
+startButton?.addEventListener("click", () => {
+  togglePanel("launcher");
+});
+
+openMusicButton?.addEventListener("click", () => {
+  togglePanel("music");
+});
+
+panelOpenButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    togglePanel(button.dataset.openPanel);
+  });
+});
+
+closePanelButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    closePanel(button.dataset.closePanel);
+  });
+});
+
+gameLaunchButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    openGame(button.dataset.launchGame);
+  });
+});
+
+webButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (["youtube", "spotify", "tiktok"].includes(button.dataset.openWeb)) {
+      openMediaProvider(button.dataset.openWeb);
+      return;
+    }
+    openWebApp(button.dataset.openWeb);
+  });
+});
+
+webUrlForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  openCustomWebUrl(webUrlInput.value);
+});
+
+mediaEmbedForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const app = webApps[activeWeb];
+  if (app?.mode !== "videoEmbed") return;
+
+  const embedUrl = buildVideoEmbedUrl(app.provider, mediaEmbedInput.value);
+  if (!embedUrl) {
+    webFrame.srcdoc = makeBlockedFrame(
+      {
+        title: "Could not embed",
+        note: `Paste a valid ${app.title} video link or ID. The full ${app.title} homepage cannot be embedded here.`
+      },
+      "about:blank"
+    );
+    return;
+  }
+
+  currentWebUrl = embedUrl;
+  webUrlInput.value = embedUrl;
+  webFrame.removeAttribute("srcdoc");
+  webFrame.src = embedUrl;
+});
+
+mediaSearchForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  handleMediaSearch(mediaSearchInput.value);
+});
+
+mediaSearchInput?.addEventListener("input", () => {
+  window.clearTimeout(mediaSearchDebounceTimer);
+  if (mediaState.provider !== "spotify") return;
+  mediaSearchDebounceTimer = window.setTimeout(() => {
+    handleMediaSearch(mediaSearchInput.value);
+  }, 420);
+});
+
+mediaProviderButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    openMediaProvider(button.dataset.mediaProvider);
+  });
+});
+
+mediaGrid?.addEventListener("click", (event) => {
+  if (event.target.closest("a")) return;
+  const directMediaButton = event.target.closest("button[data-media-kind], button[data-spotify-type], button[data-tiktok-connect], button[data-media-retry]");
+  if (directMediaButton) {
+    selectMediaCard(directMediaButton);
+    return;
+  }
+  selectMediaCard(event.target.closest(".media-card"));
+});
+
+mediaGrid?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const card = event.target.closest(".media-card");
+  if (!card) return;
+  event.preventDefault();
+  selectMediaCard(card);
+});
+
+mediaLoadMore?.addEventListener("click", () => {
+  searchYouTube({ append: true });
+});
+
+mediaPlayerClose?.addEventListener("click", () => {
+  mediaPlayer.hidden = true;
+  youtubePlayer?.destroy?.();
+  youtubePlayer = null;
+  mediaPlayerFrame.innerHTML = "";
+});
+
+settingsWallpaperButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    applyWallpaper(button.dataset.wallpaperOption);
+  });
+});
+
+settingsFontButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    applyFont(button.dataset.fontOption);
+  });
+});
+
+webReloadButton.addEventListener("click", () => {
+  const app = webApps[activeWeb];
+  if (app?.mode === "videoEmbed" && currentWebUrl === "about:blank") {
+    webFrame.srcdoc = makeVideoPromptFrame(app);
+    return;
+  }
+  if (app?.embedBlocked) {
+    webFrame.srcdoc = makeBlockedFrame(app, currentWebUrl);
+    return;
+  }
+  webFrame.src = currentWebUrl;
+});
+
+switchButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveLocalGame(button.dataset.gameSwitch);
+  });
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeAllPanels();
+    return;
+  }
+
+  if (event.target instanceof HTMLInputElement) return;
+  if (!isDrawerOpen("game")) return;
+
+  const directions = {
+    ArrowUp: "up",
+    ArrowDown: "down",
+    ArrowLeft: "left",
+    ArrowRight: "right"
+  };
+
+  if (!directions[event.key]) return;
+
+  if (activeLocalGame === "merge") {
+    event.preventDefault();
+    merge.move(directions[event.key]);
+  }
+
+  if (activeLocalGame === "snake") {
+    event.preventDefault();
+    snake.setDirection(directions[event.key]);
+  }
+});
+
+function bindSwipe(element, callback) {
+  if (!element) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  element.addEventListener("pointerdown", (event) => {
+    startX = event.clientX;
+    startY = event.clientY;
+  });
+
+  element.addEventListener("pointerup", (event) => {
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+    const threshold = 24;
+
+    if (Math.abs(deltaX) < threshold && Math.abs(deltaY) < threshold) return;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      callback(deltaX > 0 ? "right" : "left");
+    } else {
+      callback(deltaY > 0 ? "down" : "up");
+    }
+  });
+}
+
+velofyPrev.addEventListener("click", () => {
+  loadTrack(currentTrackIndex - 1, !audioElement.paused);
+});
+velofyNext.addEventListener("click", () => {
+  loadTrack(currentTrackIndex + 1, !audioElement.paused);
+});
+velofyPlay.addEventListener("click", () => {
+  if (audioElement.paused) {
+    audioElement.play().catch(() => {});
+  } else {
+    audioElement.pause();
+  }
+});
+
+audioElement.addEventListener("play", updateNowPlayingUi);
+audioElement.addEventListener("pause", updateNowPlayingUi);
+audioElement.addEventListener("ended", () => loadTrack(currentTrackIndex + 1, true));
+audioElement.addEventListener("loadedmetadata", () => {
+  velofyProgress.max = String(Math.floor(audioElement.duration || 0));
+  velofyDuration.textContent = formatSeconds(audioElement.duration || 0);
+});
+audioElement.addEventListener("timeupdate", () => {
+  velofyProgress.value = String(Math.floor(audioElement.currentTime || 0));
+  velofyElapsed.textContent = formatSeconds(audioElement.currentTime || 0);
+});
+velofyProgress.addEventListener("input", () => {
+  audioElement.currentTime = Number(velofyProgress.value);
+});
+velofyPlaylist.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-track-index]");
+  if (!button) return;
+  loadTrack(Number(button.dataset.trackIndex), true);
+});
+
+const merge = (() => {
+  const boardElement = document.getElementById("mergeBoard");
+  const scoreElement = document.getElementById("mergeScore");
+  const bestElement = document.getElementById("mergeBest");
+  const statusElement = document.getElementById("mergeStatus");
+  const resetButton = document.getElementById("mergeReset");
+  const pad = document.querySelector('.mobile-pad[data-pad="merge"]');
+
+  let board = Array(16).fill(0);
+  let score = 0;
+  let best = storage.get("vel-merge-best", 0);
+
+  function emptyIndices() {
+    return board
+      .map((value, index) => ({ value, index }))
+      .filter((item) => item.value === 0)
+      .map((item) => item.index);
+  }
+
+  function addRandomTile() {
+    const choices = emptyIndices();
+    if (!choices.length) return;
+    const pick = choices[Math.floor(Math.random() * choices.length)];
+    board[pick] = Math.random() < 0.9 ? 2 : 4;
+  }
+
+  function updateBest() {
+    if (score > best) {
+      best = score;
+      storage.set("vel-merge-best", best);
+    }
+    bestElement.textContent = String(best);
+  }
+
+  function render() {
+    boardElement.innerHTML = "";
+    board.forEach((value) => {
+      const cell = document.createElement("div");
+      cell.className = `merge-cell${value === 0 ? " empty" : ""}`;
+      if (value > 0) {
+        cell.dataset.value = String(value);
+        cell.textContent = String(value);
+      } else {
+        cell.textContent = "0";
+      }
+      boardElement.appendChild(cell);
+    });
+    scoreElement.textContent = String(score);
+    updateBest();
+  }
+
+  function slideLine(line) {
+    const filtered = line.filter(Boolean);
+    const merged = [];
+    let moved = false;
+
+    for (let index = 0; index < filtered.length; index += 1) {
+      if (filtered[index] === filtered[index + 1]) {
+        const value = filtered[index] * 2;
+        merged.push(value);
+        score += value;
+        index += 1;
+        moved = true;
+      } else {
+        merged.push(filtered[index]);
+      }
+    }
+
+    while (merged.length < 4) {
+      merged.push(0);
+    }
+
+    if (!moved) {
+      moved = merged.some((value, index) => value !== line[index]);
+    }
+
+    return { line: merged, moved };
+  }
+
+  function applyDirection(direction) {
+    const nextBoard = [...board];
+    let moved = false;
+
+    for (let outer = 0; outer < 4; outer += 1) {
+      let indices = [];
+
+      if (direction === "left" || direction === "right") {
+        indices = [0, 1, 2, 3].map((inner) => outer * 4 + inner);
+      } else {
+        indices = [0, 1, 2, 3].map((inner) => inner * 4 + outer);
+      }
+
+      if (direction === "right" || direction === "down") {
+        indices.reverse();
+      }
+
+      const values = indices.map((index) => board[index]);
+      const result = slideLine(values);
+      if (result.moved) moved = true;
+      result.line.forEach((value, index) => {
+        nextBoard[indices[index]] = value;
+      });
+    }
+
+    if (moved) {
+      board = nextBoard;
+      addRandomTile();
+      render();
+      statusElement.textContent = isGameOver()
+        ? "No more moves. Start a new board and go again."
+        : "Clean move. Keep merging toward 2048.";
+    }
+  }
+
+  function isGameOver() {
+    if (emptyIndices().length > 0) return false;
+
+    return !board.some((value, index) => {
+      const row = Math.floor(index / 4);
+      const col = index % 4;
+      const right = col < 3 ? board[index + 1] : null;
+      const down = row < 3 ? board[index + 4] : null;
+      return value === right || value === down;
+    });
+  }
+
+  function move(direction) {
+    if (isGameOver()) {
+      statusElement.textContent = "No more moves. Start a new board and go again.";
+      return;
+    }
+    applyDirection(direction);
+  }
+
+  function reset() {
+    board = Array(16).fill(0);
+    score = 0;
+    addRandomTile();
+    addRandomTile();
+    render();
+    statusElement.textContent = "Fresh board loaded. Merge matching tiles to build momentum.";
+  }
+
+  resetButton.addEventListener("click", reset);
+  pad?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-dir]");
+    if (!button) return;
+    move(button.dataset.dir);
+  });
+  bindSwipe(document.getElementById("mergeSwipeZone"), move);
+
+  return { reset, move };
+})();
+
+const memory = (() => {
+  const gridElement = document.getElementById("memoryGrid");
+  const movesElement = document.getElementById("memoryMoves");
+  const pairsElement = document.getElementById("memoryPairs");
+  const statusElement = document.getElementById("memoryStatus");
+  const resetButton = document.getElementById("memoryReset");
+
+  const symbols = ["Nova", "Orbit", "Pulse", "Luna", "Ray", "Comet"];
+
+  let deck = [];
+  let revealed = [];
+  let matched = 0;
+  let moves = 0;
+  let lockBoard = false;
+
+  function shuffle(items) {
+    const clone = [...items];
+    for (let index = clone.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [clone[index], clone[swapIndex]] = [clone[swapIndex], clone[index]];
+    }
+    return clone;
+  }
+
+  function updateCopy() {
+    movesElement.textContent = String(moves);
+    pairsElement.textContent = `${matched} / 6`;
+  }
+
+  function render() {
+    gridElement.innerHTML = "";
+    deck.forEach((card, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `memory-card${card.revealed ? " is-revealed" : ""}${card.matched ? " is-matched" : ""}`;
+      button.dataset.index = String(index);
+      button.innerHTML = `
+        <span class="memory-card-inner">
+          <span class="memory-face memory-front"></span>
+          <span class="memory-face memory-back">
+            <strong>${card.label}</strong>
+          </span>
+        </span>
+      `;
+      gridElement.appendChild(button);
+    });
+  }
+
+  function reset() {
+    const pairs = symbols.flatMap((label) => [
+      { label, revealed: false, matched: false },
+      { label, revealed: false, matched: false }
+    ]);
+    deck = shuffle(pairs);
+    revealed = [];
+    matched = 0;
+    moves = 0;
+    lockBoard = false;
+    updateCopy();
+    render();
+    statusElement.textContent = "Grid shuffled. Flip cards and lock in the pairs.";
+  }
+
+  function checkRound() {
+    if (revealed.length < 2) return;
+
+    const [firstIndex, secondIndex] = revealed;
+    const first = deck[firstIndex];
+    const second = deck[secondIndex];
+
+    moves += 1;
+    updateCopy();
+
+    if (first.label === second.label) {
+      deck[firstIndex].matched = true;
+      deck[secondIndex].matched = true;
+      matched += 1;
+      revealed = [];
+      render();
+      updateCopy();
+      statusElement.textContent =
+        matched === symbols.length
+          ? `Board cleared in ${moves} moves. Shuffle for another round.`
+          : "Pair found. Keep going.";
+      return;
+    }
+
+    lockBoard = true;
+    statusElement.textContent = "No match. Watch the board and try again.";
+
+    window.setTimeout(() => {
+      deck[firstIndex].revealed = false;
+      deck[secondIndex].revealed = false;
+      revealed = [];
+      lockBoard = false;
+      render();
+    }, 720);
+  }
+
+  gridElement.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-index]");
+    if (!button || lockBoard) return;
+
+    const index = Number(button.dataset.index);
+    const card = deck[index];
+    if (card.revealed || card.matched) return;
+
+    deck[index].revealed = true;
+    revealed.push(index);
+    render();
+    checkRound();
+  });
+
+  resetButton.addEventListener("click", reset);
+
+  return { reset };
+})();
+
+const snake = (() => {
+  const canvas = document.getElementById("snakeCanvas");
+  const context = canvas.getContext("2d");
+  const scoreElement = document.getElementById("snakeScore");
+  const bestElement = document.getElementById("snakeBest");
+  const statusElement = document.getElementById("snakeStatus");
+  const startPauseButton = document.getElementById("snakeStartPause");
+  const resetButton = document.getElementById("snakeReset");
+  const pad = document.querySelector('.mobile-pad[data-pad="snake"]');
+
+  const gridSize = 18;
+  let snakeBody = [];
+  let direction = "right";
+  let nextDirection = "right";
+  let food = { x: 10, y: 10 };
+  let score = 0;
+  let best = storage.get("vel-snake-best", 0);
+  let intervalId = null;
+  let running = false;
+
+  function resizeCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    canvas.width = Math.floor(rect.width * ratio);
+    canvas.height = Math.floor(rect.height * ratio);
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    draw();
+  }
+
+  function updateCopy() {
+    scoreElement.textContent = String(score);
+    bestElement.textContent = String(best);
+    startPauseButton.textContent = running ? "Pause" : "Start";
+  }
+
+  function randomFood() {
+    let nextFood = null;
+    do {
+      nextFood = {
+        x: Math.floor(Math.random() * gridSize),
+        y: Math.floor(Math.random() * gridSize)
+      };
+    } while (snakeBody.some((segment) => segment.x === nextFood.x && segment.y === nextFood.y));
+    food = nextFood;
+  }
+
+  function resetState() {
+    snakeBody = [
+      { x: 6, y: 9 },
+      { x: 5, y: 9 },
+      { x: 4, y: 9 }
+    ];
+    direction = "right";
+    nextDirection = "right";
+    score = 0;
+    randomFood();
+    updateCopy();
+  }
+
+  function fillRoundedRect(x, y, width, height, radius) {
+    if (typeof context.roundRect === "function") {
+      context.beginPath();
+      context.roundRect(x, y, width, height, radius);
+      context.fill();
+      return;
+    }
+    context.fillRect(x, y, width, height);
+  }
+
+  function drawGrid(size) {
+    context.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    context.lineWidth = 1;
+    for (let index = 0; index <= gridSize; index += 1) {
+      context.beginPath();
+      context.moveTo(index * size, 0);
+      context.lineTo(index * size, gridSize * size);
+      context.stroke();
+
+      context.beginPath();
+      context.moveTo(0, index * size);
+      context.lineTo(gridSize * size, index * size);
+      context.stroke();
+    }
+  }
+
+  function draw() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const size = rect.width / gridSize;
+
+    context.clearRect(0, 0, rect.width, rect.height);
+    context.fillStyle = "#050505";
+    context.fillRect(0, 0, rect.width, rect.height);
+    drawGrid(size);
+
+    snakeBody.forEach((segment, index) => {
+      context.fillStyle = index === 0 ? "#ffffff" : "#d8d8d8";
+      fillRoundedRect(segment.x * size + 2, segment.y * size + 2, size - 4, size - 4, 8);
+    });
+
+    context.beginPath();
+    context.fillStyle = "#ffffff";
+    context.arc(food.x * size + size / 2, food.y * size + size / 2, size * 0.24, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  function endGame() {
+    running = false;
+    if (intervalId) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+    if (score > best) {
+      best = score;
+      storage.set("vel-snake-best", best);
+    }
+    updateCopy();
+    statusElement.textContent = `Crash. Final score ${score}. Reset or start a fresh run.`;
+    draw();
+  }
+
+  function tick() {
+    direction = nextDirection;
+    const head = { ...snakeBody[0] };
+
+    if (direction === "up") head.y -= 1;
+    if (direction === "down") head.y += 1;
+    if (direction === "left") head.x -= 1;
+    if (direction === "right") head.x += 1;
+
+    if (
+      head.x < 0 ||
+      head.y < 0 ||
+      head.x >= gridSize ||
+      head.y >= gridSize ||
+      snakeBody.some((segment) => segment.x === head.x && segment.y === head.y)
+    ) {
+      endGame();
+      return;
+    }
+
+    snakeBody.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+      score += 1;
+      if (score > best) {
+        best = score;
+        storage.set("vel-snake-best", best);
+      }
+      randomFood();
+      statusElement.textContent = "Food collected. Keep the trail clean.";
+    } else {
+      snakeBody.pop();
+    }
+
+    updateCopy();
+    draw();
+  }
+
+  function start() {
+    if (running) {
+      pause("Snake paused.");
+      return;
+    }
+    running = true;
+    updateCopy();
+    statusElement.textContent = "Run live. Collect food and avoid your tail.";
+    intervalId = window.setInterval(tick, 125);
+  }
+
+  function pause(message = "Snake paused.") {
+    if (!running) return;
+    running = false;
+    if (intervalId) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+    updateCopy();
+    statusElement.textContent = message;
+  }
+
+  function reset() {
+    if (intervalId) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+    running = false;
+    resetState();
+    statusElement.textContent = "Board reset. Press start when you are ready.";
+    draw();
+  }
+
+  function setDirection(next) {
+    const opposites = {
+      up: "down",
+      down: "up",
+      left: "right",
+      right: "left"
+    };
+    if (opposites[direction] === next) return;
+    nextDirection = next;
+  }
+
+  startPauseButton.addEventListener("click", start);
+  resetButton.addEventListener("click", reset);
+  pad?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-dir]");
+    if (!button) return;
+    setDirection(button.dataset.dir);
+  });
+  bindSwipe(document.getElementById("snakeSwipeZone"), setDirection);
+  window.addEventListener("resize", resizeCanvas);
+
+  resetState();
+  window.setTimeout(resizeCanvas, 0);
+
+  return { start, reset, pause, refresh: resizeCanvas, setDirection };
+})();
+
+const wordWarp = (() => {
+  const categoryElement = document.getElementById("wordCategory");
+  const scrambleElement = document.getElementById("wordScramble");
+  const hintElement = document.getElementById("wordHint");
+  const statusElement = document.getElementById("wordStatus");
+  const streakElement = document.getElementById("wordStreak");
+  const solvedElement = document.getElementById("wordSolved");
+  const form = document.getElementById("wordForm");
+  const input = document.getElementById("wordInput");
+  const shuffleButton = document.getElementById("wordShuffle");
+  const nextButton = document.getElementById("wordNext");
+
+  const words = [
+    { word: "galaxy", category: "Theme: space", hint: "A huge island of stars." },
+    { word: "meteor", category: "Theme: sky", hint: "A fast rock streaking through the atmosphere." },
+    { word: "rocket", category: "Theme: launch", hint: "It blasts upward on a bright plume." },
+    { word: "planet", category: "Theme: orbit", hint: "A world circling a star." },
+    { word: "puzzle", category: "Theme: game", hint: "A challenge solved with logic." },
+    { word: "arcade", category: "Theme: play", hint: "A place full of games." },
+    { word: "comet", category: "Theme: sky", hint: "A bright traveler with a tail." },
+    { word: "signal", category: "Theme: tech", hint: "A message or pattern sent out." }
+  ];
+
+  let currentWord = words[0];
+  let streak = 0;
+  let solved = 0;
+
+  function shuffleLetters(word) {
+    const letters = word.toUpperCase().split("");
+    let shuffled = [...letters];
+
+    do {
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+      }
+    } while (shuffled.join("") === letters.join(""));
+
+    return shuffled.join(" ");
+  }
+
+  function updateCopy() {
+    categoryElement.textContent = currentWord.category;
+    scrambleElement.textContent = shuffleLetters(currentWord.word);
+    hintElement.textContent = `Hint: ${currentWord.hint}`;
+    streakElement.textContent = String(streak);
+    solvedElement.textContent = String(solved);
+    input.value = "";
+  }
+
+  function pickNewWord() {
+    const options = words.filter((item) => item.word !== currentWord.word);
+    currentWord = options[Math.floor(Math.random() * options.length)];
+    updateCopy();
+    statusElement.textContent = "New word loaded. Keep the streak moving.";
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const guess = input.value.trim().toLowerCase();
+
+    if (!guess) {
+      statusElement.textContent = "Type a guess before you submit.";
+      return;
+    }
+
+    if (guess === currentWord.word) {
+      streak += 1;
+      solved += 1;
+      updateCopy();
+      statusElement.textContent = `Correct. ${currentWord.word.toUpperCase()} locked in.`;
+      window.setTimeout(pickNewWord, 750);
+      return;
+    }
+
+    streak = 0;
+    streakElement.textContent = String(streak);
+    statusElement.textContent = "Not quite. Try again or reshuffle the letters.";
+  });
+
+  shuffleButton.addEventListener("click", () => {
+    scrambleElement.textContent = shuffleLetters(currentWord.word);
+    statusElement.textContent = "Letters reshuffled. Fresh angle, same word.";
+  });
+
+  nextButton.addEventListener("click", pickNewWord);
+
+  updateCopy();
+
+  return { pickNewWord };
+})();
+
+const tapRush = (() => {
+  const gridElement = document.getElementById("tapGrid");
+  const scoreElement = document.getElementById("tapScore");
+  const timeElement = document.getElementById("tapTime");
+  const bestElement = document.getElementById("tapBest");
+  const statusElement = document.getElementById("tapStatus");
+  const startButton = document.getElementById("tapStart");
+
+  const cellCount = 12;
+  let score = 0;
+  let timeLeft = 20;
+  let best = storage.get("vel-tap-best", 0);
+  let activeIndex = -1;
+  let running = false;
+  let moveTimer = null;
+  let clockTimer = null;
+  let speed = 680;
+
+  function renderGrid() {
+    gridElement.innerHTML = "";
+    for (let index = 0; index < cellCount; index += 1) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `tap-cell${index === activeIndex ? " is-target" : ""}`;
+      button.dataset.index = String(index);
+      gridElement.appendChild(button);
+    }
+    scoreElement.textContent = String(score);
+    timeElement.textContent = String(timeLeft);
+    bestElement.textContent = String(best);
+  }
+
+  function activateRandomCell() {
+    let nextIndex = 0;
+    do {
+      nextIndex = Math.floor(Math.random() * cellCount);
+    } while (nextIndex === activeIndex && cellCount > 1);
+    activeIndex = nextIndex;
+    renderGrid();
+  }
+
+  function clearTimers() {
+    if (moveTimer) {
+      window.clearInterval(moveTimer);
+      moveTimer = null;
+    }
+    if (clockTimer) {
+      window.clearInterval(clockTimer);
+      clockTimer = null;
+    }
+  }
+
+  function stop(updateBestScore = true, message = "Sprint over. Press start for another run.") {
+    if (!running && !moveTimer && !clockTimer) {
+      statusElement.textContent = message;
+      activeIndex = -1;
+      renderGrid();
+      return;
+    }
+
+    running = false;
+    clearTimers();
+    if (updateBestScore && score > best) {
+      best = score;
+      storage.set("vel-tap-best", best);
+    }
+    activeIndex = -1;
+    renderGrid();
+    statusElement.textContent = message;
+  }
+
+  function start() {
+    running = true;
+    score = 0;
+    timeLeft = 20;
+    speed = 680;
+    statusElement.textContent = "Sprint live. Hit the bright target before it jumps.";
+    activateRandomCell();
+
+    clearTimers();
+    moveTimer = window.setInterval(() => {
+      activateRandomCell();
+    }, speed);
+
+    clockTimer = window.setInterval(() => {
+      timeLeft -= 1;
+      timeElement.textContent = String(timeLeft);
+      if (timeLeft <= 0) {
+        stop(true, `Time. Final score ${score}. Press start to sprint again.`);
+      }
+    }, 1000);
+  }
+
+  gridElement.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-index]");
+    if (!button) return;
+
+    const index = Number(button.dataset.index);
+    if (!running) return;
+
+    if (index === activeIndex) {
+      score += 1;
+      if (score > best) {
+        best = score;
+        storage.set("vel-tap-best", best);
+      }
+      if (score % 5 === 0 && speed > 320) {
+        speed -= 50;
+        clearTimers();
+        moveTimer = window.setInterval(activateRandomCell, speed);
+        clockTimer = window.setInterval(() => {
+          timeLeft -= 1;
+          timeElement.textContent = String(timeLeft);
+          if (timeLeft <= 0) {
+            stop(true, `Time. Final score ${score}. Press start to sprint again.`);
+          }
+        }, 1000);
+      }
+      activateRandomCell();
+      renderGrid();
+      statusElement.textContent = "Clean hit. Keep the pace up.";
+      return;
+    }
+
+    button.classList.add("is-miss");
+    window.setTimeout(() => button.classList.remove("is-miss"), 180);
+    statusElement.textContent = "Miss. Chase the bright cell.";
+  });
+
+  startButton.addEventListener("click", start);
+
+  renderGrid();
+
+  return { start, stop };
+})();
+
+memory.reset();
+merge.reset();
+snake.reset();
+wordWarp.pickNewWord();
+tapRush.stop(false, "Press start, then tap the bright cell before it jumps away.");
+renderPlaylist();
+loadTrack(0, false);
+applyWallpaper(currentWallpaperKey);
+applyFont(currentFontKey);
+setActiveLocalGame(activeLocalGame);
+if (mediaSearchInput) {
+  mediaSearchInput.value = mediaState.query;
+}
+renderMediaHub();
+const startupMediaProvider = new URLSearchParams(window.location.search).get("media");
+if (["youtube", "spotify", "tiktok", "all"].includes(startupMediaProvider)) {
+  window.history.replaceState({}, "", window.location.pathname);
+  openMediaProvider(startupMediaProvider);
+}
+updateClock();
+updateNowPlayingUi();
+syncTaskbarState();
+window.setInterval(updateClock, 1000);

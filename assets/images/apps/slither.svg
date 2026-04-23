@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Slither">
+  <rect width="128" height="128" rx="30" fill="#080808"/>
+  <path d="M23 72c12-28 42-37 63-26 20 10 19 34-2 43-17 7-34-1-37-14-2-11 6-21 18-23" fill="none" stroke="#f8fafc" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 72c5-11 13-20 23-25" fill="none" stroke="#ef4444" stroke-width="13" stroke-linecap="round"/>
+  <path d="M47 47c11-6 25-7 39 0" fill="none" stroke="#f59e0b" stroke-width="13" stroke-linecap="round"/>
+  <circle cx="79" cy="50" r="4" fill="#080808"/>
+  <circle cx="91" cy="55" r="4" fill="#080808"/>
+</svg>

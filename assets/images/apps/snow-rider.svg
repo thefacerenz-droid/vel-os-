@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Snow Rider">
+  <rect width="128" height="128" rx="30" fill="#07111d"/>
+  <path d="M17 86c20-27 37-40 52-40 16 0 29 14 42 40H17z" fill="#dbeafe"/>
+  <path d="M26 92h76" stroke="#f8fafc" stroke-width="10" stroke-linecap="round"/>
+  <path d="M42 82h32l18 13" fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="42" cy="35" r="8" fill="#f8fafc"/>
+  <path d="M91 24l5 12 13 1-10 8 3 13-11-7-11 7 3-13-10-8 13-1 5-12z" fill="#93c5fd"/>
+</svg>

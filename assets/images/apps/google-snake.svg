@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Google Snake">
+  <rect width="128" height="128" rx="30" fill="#0b0f0c"/>
+  <path d="M28 76c0-24 18-40 42-40h14c11 0 20 9 20 20s-9 20-20 20H66c-7 0-12 5-12 12s5 12 12 12h25" fill="none" stroke="#34a853" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="86" cy="54" r="5" fill="#f9fafb"/>
+  <circle cx="101" cy="91" r="8" fill="#fbbc05"/>
+  <path d="M27 41h18v18H27z" fill="#4285f4"/>
+  <path d="M45 41h18v18H45z" fill="#ea4335"/>
+</svg>

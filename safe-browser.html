@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Direct Browser Shell</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      min-height: 100dvh;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.09), transparent 28rem),
+        radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.06), transparent 24rem),
+        #050505;
+    }
+
+    .glass {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(18, 18, 18, 0.76);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(22px);
+    }
+
+    .tab-item[aria-selected="true"] {
+      border-color: rgba(255, 255, 255, 0.32);
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .panel {
+      transform: translateX(105%);
+      transition: transform 220ms ease;
+    }
+
+    .panel.is-open {
+      transform: translateX(0);
+    }
+
+    iframe {
+      color-scheme: normal;
+    }
+  </style>
+</head>
+<body class="text-zinc-100 antialiased">
+  <main class="flex min-h-dvh flex-col p-3 sm:p-4">
+    <section class="glass flex min-h-[calc(100dvh-1.5rem)] flex-1 flex-col overflow-hidden rounded-[2rem]">
+      <header class="border-b border-white/10 bg-black/30">
+        <div class="flex items-center gap-2 overflow-x-auto px-3 py-2" id="tabs" role="tablist" aria-label="Browser tabs"></div>
+
+        <div class="grid gap-3 border-t border-white/10 p-3 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+          <div class="flex items-center gap-2">
+            <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40" id="backButton" type="button" aria-label="Back">Back</button>
+            <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40" id="forwardButton" type="button" aria-label="Forward">Forward</button>
+            <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/10" id="refreshButton" type="button" aria-label="Refresh">Refresh</button>
+            <button class="rounded-2xl border border-white/10 bg-white px-3 py-2 text-sm font-black text-black hover:bg-zinc-200" id="newTabButton" type="button">New Tab</button>
+          </div>
+
+          <form class="flex min-w-0 items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-1.5" id="addressForm">
+            <input class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500" id="addressInput" type="text" placeholder="Enter a URL or search text" autocomplete="off" aria-label="Address bar" />
+            <button class="rounded-xl bg-white px-4 py-2 text-sm font-black text-black hover:bg-zinc-200" type="submit">Go</button>
+          </form>
+
+          <div class="flex items-center justify-end gap-2">
+            <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/10" id="bookmarkButton" type="button">Bookmark</button>
+            <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/10" id="historyButton" type="button">History</button>
+            <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/10" id="settingsButton" type="button">Settings</button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 border-t border-white/10 px-3 py-2 text-xs text-zinc-400">
+          <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">Mode: <strong class="text-white">Direct</strong></span>
+          <span class="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-amber-100">Proxy routing disabled in this safe build</span>
+          <span class="ml-auto" id="statusText">Ready</span>
+        </div>
+      </header>
+
+      <section class="relative flex-1 bg-zinc-950">
+        <iframe class="h-full min-h-[62dvh] w-full border-0 bg-white" id="browserFrame" title="Browser content" sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"></iframe>
+
+        <div class="pointer-events-none absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-black/70 p-3 text-xs text-zinc-300 shadow-2xl backdrop-blur-xl" id="frameNotice" hidden>
+          Some sites block iframe display with browser security headers. That is normal in direct mode.
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <aside class="panel fixed inset-y-3 right-3 z-20 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/95 shadow-2xl backdrop-blur-2xl" id="sidePanel" aria-hidden="true">
+    <div class="flex items-center justify-between border-b border-white/10 p-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500" id="panelKicker">Panel</p>
+        <h2 class="text-xl font-black" id="panelTitle">Settings</h2>
+      </div>
+      <button class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold hover:bg-white/10" id="closePanelButton" type="button">Close</button>
+    </div>
+    <div class="h-[calc(100%-73px)] overflow-y-auto p-4" id="panelBody"></div>
+  </aside>
+
+  <script>
+    const STORAGE_KEY = "direct-browser-shell-v1";
+    const DEFAULT_URL = "https://example.com";
+
+    const fallbackState = {
+      tabs: [],
+      activeTabId: "",
+      history: [],
+      bookmarks: [],
+      settings: {
+        openNewTabsTo: DEFAULT_URL,
+        searchEngine: "https://www.google.com/search?q="
+      }
+    };
+
+    const elements = {
+      tabs: document.getElementById("tabs"),
+      frame: document.getElementById("browserFrame"),
+      form: document.getElementById("addressForm"),
+      input: document.getElementById("addressInput"),
+      back: document.getElementById("backButton"),
+      forward: document.getElementById("forwardButton"),
+      refresh: document.getElementById("refreshButton"),
+      newTab: document.getElementById("newTabButton"),
+      bookmark: document.getElementById("bookmarkButton"),
+      history: document.getElementById("historyButton"),
+      settings: document.getElementById("settingsButton"),
+      status: document.getElementById("statusText"),
+      notice: document.getElementById("frameNotice"),
+      panel: document.getElementById("sidePanel"),
+      panelKicker: document.getElementById("panelKicker"),
+      panelTitle: document.getElementById("panelTitle"),
+      panelBody: document.getElementById("panelBody"),
+      closePanel: document.getElementById("closePanelButton")
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return {
+          ...fallbackState,
+          ...stored,
+          settings: { ...fallbackState.settings, ...(stored?.settings || {}) }
+        };
+      } catch (error) {
+        return structuredClone(fallbackState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function createTab(url = state.settings.openNewTabsTo) {
+      const tab = {
+        id: crypto.randomUUID(),
+        title: titleFromUrl(url),
+        url,
+        stack: [url],
+        index: 0
+      };
+      state.tabs.push(tab);
+      state.activeTabId = tab.id;
+      pushHistory(url, tab.title);
+      saveState();
+      render();
+      loadActiveTab();
+    }
+
+    function activeTab() {
+      return state.tabs.find((tab) => tab.id === state.activeTabId) || state.tabs[0];
+    }
+
+    function closeTab(tabId) {
+      if (state.tabs.length === 1) {
+        createTab(DEFAULT_URL);
+      }
+      state.tabs = state.tabs.filter((tab) => tab.id !== tabId);
+      if (!state.tabs.some((tab) => tab.id === state.activeTabId)) {
+        state.activeTabId = state.tabs.at(-1)?.id || "";
+      }
+      saveState();
+      render();
+      loadActiveTab();
+    }
+
+    function activateTab(tabId) {
+      state.activeTabId = tabId;
+      saveState();
+      render();
+      loadActiveTab();
+    }
+
+    function normalizeInput(value) {
+      const trimmed = value.trim();
+      if (!trimmed) return DEFAULT_URL;
+
+      try {
+        const url = new URL(trimmed);
+        return url.href;
+      } catch (error) {
+        if (/^[\w-]+(\.[\w-]+)+/.test(trimmed)) {
+          return `https://${trimmed}`;
+        }
+        return `${state.settings.searchEngine}${encodeURIComponent(trimmed)}`;
+      }
+    }
+
+    function titleFromUrl(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\./, "") || "New Tab";
+      } catch (error) {
+        return "New Tab";
+      }
+    }
+
+    function navigateTo(rawValue) {
+      const tab = activeTab();
+      if (!tab) return;
+
+      const url = normalizeInput(rawValue);
+      tab.url = url;
+      tab.title = titleFromUrl(url);
+      tab.stack = tab.stack.slice(0, tab.index + 1);
+      tab.stack.push(url);
+      tab.index = tab.stack.length - 1;
+      pushHistory(url, tab.title);
+      saveState();
+      render();
+      loadActiveTab();
+    }
+
+    function pushHistory(url, title) {
+      state.history = [
+        { url, title, visitedAt: Date.now() },
+        ...state.history.filter((item) => item.url !== url)
+      ].slice(0, 80);
+    }
+
+    function loadActiveTab() {
+      const tab = activeTab();
+      if (!tab) return;
+
+      elements.input.value = tab.url;
+      elements.frame.src = tab.url;
+      elements.status.textContent = `Loading ${titleFromUrl(tab.url)}`;
+      elements.notice.hidden = true;
+      updateNavButtons();
+    }
+
+    function updateNavButtons() {
+      const tab = activeTab();
+      elements.back.disabled = !tab || tab.index <= 0;
+      elements.forward.disabled = !tab || tab.index >= tab.stack.length - 1;
+    }
+
+    function goBack() {
+      const tab = activeTab();
+      if (!tab || tab.index <= 0) return;
+      tab.index -= 1;
+      tab.url = tab.stack[tab.index];
+      saveState();
+      render();
+      loadActiveTab();
+    }
+
+    function goForward() {
+      const tab = activeTab();
+      if (!tab || tab.index >= tab.stack.length - 1) return;
+      tab.index += 1;
+      tab.url = tab.stack[tab.index];
+      saveState();
+      render();
+      loadActiveTab();
+    }
+
+    function refreshPage() {
+      elements.frame.src = activeTab()?.url || DEFAULT_URL;
+    }
+
+    function toggleBookmark() {
+      const tab = activeTab();
+      if (!tab) return;
+
+      const exists = state.bookmarks.some((item) => item.url === tab.url);
+      if (exists) {
+        state.bookmarks = state.bookmarks.filter((item) => item.url !== tab.url);
+        elements.status.textContent = "Bookmark removed";
+      } else {
+        state.bookmarks.unshift({ url: tab.url, title: tab.title, savedAt: Date.now() });
+        elements.status.textContent = "Bookmark saved";
+      }
+      saveState();
+      render();
+    }
+
+    function render() {
+      if (!state.tabs.length) createTab(DEFAULT_URL);
+      const current = activeTab();
+
+      elements.tabs.innerHTML = state.tabs.map((tab) => `
+        <div class="tab-item flex max-w-[220px] shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300" role="tab" aria-selected="${tab.id === state.activeTabId}">
+          <button class="min-w-0 flex-1 truncate text-left font-bold" type="button" data-tab-id="${tab.id}">${escapeHtml(tab.title)}</button>
+          <button class="rounded-full px-2 text-zinc-500 hover:bg-white/10 hover:text-white" type="button" data-close-tab="${tab.id}" aria-label="Close ${escapeHtml(tab.title)}">x</button>
+        </div>
+      `).join("");
+
+      elements.input.value = current?.url || "";
+      elements.bookmark.textContent = state.bookmarks.some((item) => item.url === current?.url) ? "Bookmarked" : "Bookmark";
+      updateNavButtons();
+    }
+
+    function openPanel(kind) {
+      elements.panel.classList.add("is-open");
+      elements.panel.setAttribute("aria-hidden", "false");
+
+      if (kind === "history") {
+        elements.panelKicker.textContent = "Recent";
+        elements.panelTitle.textContent = "History";
+        elements.panelBody.innerHTML = renderLinkList(state.history, "No history yet.");
+      } else if (kind === "bookmarks") {
+        elements.panelKicker.textContent = "Saved";
+        elements.panelTitle.textContent = "Bookmarks";
+        elements.panelBody.innerHTML = renderLinkList(state.bookmarks, "No bookmarks yet.");
+      } else {
+        elements.panelKicker.textContent = "Browser";
+        elements.panelTitle.textContent = "Settings";
+        elements.panelBody.innerHTML = renderSettings();
+      }
+    }
+
+    function closePanel() {
+      elements.panel.classList.remove("is-open");
+      elements.panel.setAttribute("aria-hidden", "true");
+    }
+
+    function renderLinkList(items, emptyText) {
+      if (!items.length) {
+        return `<p class="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-zinc-400">${emptyText}</p>`;
+      }
+
+      return `
+        <div class="grid gap-2">
+          ${items.map((item) => `
+            <button class="rounded-2xl border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10" type="button" data-open-url="${escapeHtml(item.url)}">
+              <strong class="block truncate text-sm text-white">${escapeHtml(item.title || titleFromUrl(item.url))}</strong>
+              <span class="block truncate text-xs text-zinc-500">${escapeHtml(item.url)}</span>
+            </button>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderSettings() {
+      return `
+        <form class="grid gap-5" id="settingsForm">
+          <section class="rounded-3xl border border-white/10 bg-white/5 p-4">
+            <h3 class="font-black">Direct Mode</h3>
+            <p class="mt-2 text-sm text-zinc-400">Pages load normally in the iframe. Sites can still block iframe display with their own security headers.</p>
+            <label class="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 text-sm">
+              <span>
+                <strong class="block text-white">Proxy routing</strong>
+                <span class="text-zinc-500">Disabled in this build to avoid bypassing network rules.</span>
+              </span>
+              <input type="checkbox" disabled />
+            </label>
+          </section>
+
+          <section class="rounded-3xl border border-white/10 bg-white/5 p-4">
+            <label class="grid gap-2 text-sm">
+              <span class="font-bold">New tab URL</span>
+              <input class="rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none focus:border-white/40" name="openNewTabsTo" value="${escapeHtml(state.settings.openNewTabsTo)}" />
+            </label>
+            <label class="mt-4 grid gap-2 text-sm">
+              <span class="font-bold">Search engine prefix</span>
+              <input class="rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none focus:border-white/40" name="searchEngine" value="${escapeHtml(state.settings.searchEngine)}" />
+            </label>
+          </section>
+
+          <section class="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
+            <h3 class="font-black">Proxy URLs</h3>
+            <p class="mt-2">Custom proxy URL management is intentionally not included. This app does not provide blocked-site bypass behavior.</p>
+          </section>
+
+          <button class="rounded-2xl bg-white px-4 py-3 font-black text-black hover:bg-zinc-200" type="submit">Save Settings</button>
+        </form>
+      `;
+    }
+
+    function saveSettings(form) {
+      const data = new FormData(form);
+      state.settings.openNewTabsTo = normalizeInput(data.get("openNewTabsTo") || DEFAULT_URL);
+      state.settings.searchEngine = String(data.get("searchEngine") || fallbackState.settings.searchEngine);
+      saveState();
+      elements.status.textContent = "Settings saved";
+      openPanel("settings");
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    elements.form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      navigateTo(elements.input.value);
+    });
+
+    elements.tabs.addEventListener("click", (event) => {
+      const tabButton = event.target.closest("[data-tab-id]");
+      const closeButton = event.target.closest("[data-close-tab]");
+      if (closeButton) closeTab(closeButton.dataset.closeTab);
+      if (tabButton) activateTab(tabButton.dataset.tabId);
+    });
+
+    elements.back.addEventListener("click", goBack);
+    elements.forward.addEventListener("click", goForward);
+    elements.refresh.addEventListener("click", refreshPage);
+    elements.newTab.addEventListener("click", () => createTab());
+    elements.bookmark.addEventListener("click", toggleBookmark);
+    elements.history.addEventListener("click", () => openPanel("history"));
+    elements.settings.addEventListener("click", () => openPanel("settings"));
+    elements.closePanel.addEventListener("click", closePanel);
+
+    elements.panelBody.addEventListener("click", (event) => {
+      const openButton = event.target.closest("[data-open-url]");
+      if (openButton) {
+        navigateTo(openButton.dataset.openUrl);
+        closePanel();
+      }
+    });
+
+    elements.panelBody.addEventListener("submit", (event) => {
+      if (event.target.id !== "settingsForm") return;
+      event.preventDefault();
+      saveSettings(event.target);
+    });
+
+    elements.frame.addEventListener("load", () => {
+      const tab = activeTab();
+      if (!tab) return;
+
+      // Cross-origin pages usually block title reads. We try, then fall back cleanly.
+      try {
+        const pageTitle = elements.frame.contentDocument?.title?.trim();
+        if (pageTitle) tab.title = pageTitle;
+      } catch (error) {
+        tab.title = titleFromUrl(tab.url);
+      }
+
+      elements.status.textContent = `Loaded ${tab.title}`;
+      elements.notice.hidden = false;
+      window.setTimeout(() => {
+        elements.notice.hidden = true;
+      }, 3600);
+      saveState();
+      render();
+    });
+
+    if (!state.tabs.length) {
+      createTab(DEFAULT_URL);
+    } else {
+      render();
+      loadActiveTab();
+    }
+  </script>
+</body>
+</html>
